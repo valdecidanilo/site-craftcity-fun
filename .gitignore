@@ -1,0 +1,53 @@
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+.next/
+out/
+
+# Production build
+dist/
+
+# Testing
+coverage/
+*.lcov
+
+# Environment variables
+.env
+.env.*.local
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.AddCompLib/
+.vscode/
+.idea/
+*.swp
+
+# Typescript cache
+*.tsbuildinfo
+
+# Vercel / Netlify
+.vercel/
+.netlify/
+
+# Optional: local exports
+exported/
+
+# Optional: ignore public storage assets if they’re local dev
+/public/uploads/
+/public/temp/
+
+# Optional: Turbo repo or monorepo cache
+turbo/
+
+# Mac ._ files
+**/._*

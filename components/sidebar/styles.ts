@@ -1,0 +1,5 @@
+export const sidebarWrapper = "w-80 bg-[#1c2230]/95 backdrop-blur-sm min-h-screen p-6"
+export const sidebarItem = "flex items-center justify-between p-4 hover:bg-[#1b202d] rounded-lg cursor-pointer transition-colors"
+export const sidebarIconText = "flex items-center gap-3"
+export const sidebarTitle = "text-white font-semibold text-lg"
+export const sidebarChevron = "w-5 h-5 text-[#8f8f8f]"
