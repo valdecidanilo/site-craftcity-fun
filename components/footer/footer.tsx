@@ -10,8 +10,8 @@ export function Footer() {
             <Image
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Dalle-CraftCity-Title-pbj0VPvEBUrdqam5Znd5qDuEzfGiOk.png"
               alt="Craft City Logo"
-              width={120}
-              height={60}
+              width={80}
+              height={20}
               className="object-contain"
             />
             <span className={styles.footerText}>CraftCity © 2025</span>
