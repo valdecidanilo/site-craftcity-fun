@@ -16,27 +16,68 @@ export default function Component() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState('Todas')
   const productsPerPage = 6
+  
 
-  // Mock products data com categoria
+  // Mock products data com categoria e subcategoria
   const products = [
-    { id: 1, name: "Diamond Sword", price: "R$ 29,99", description: "Uma espada poderosa feita de diamante puro para dominar seus inimigos.", category: "Armas" },
-    { id: 2, name: "Enchanted Pickaxe", price: "R$ 19,99", description: "Picareta encantada que aumenta sua velocidade de mineração.", category: "Ferramentas" },
-    { id: 3, name: "Golden Armor Set", price: "R$ 49,99", description: "Conjunto completo de armadura dourada para máxima proteção.", category: "Armaduras" },
-    { id: 4, name: "Magic Potion Pack", price: "R$ 15,99", description: "Pacote com 10 poções mágicas variadas para suas aventuras.", category: "Poções" },
-    { id: 5, name: "Rare Block Bundle", price: "R$ 24,99", description: "Coleção de blocos raros para construções únicas.", category: "Blocos" },
-    { id: 6, name: "Pet Dragon Egg", price: "R$ 99,99", description: "Ovo de dragão que pode ser chocado para ter um pet exclusivo.", category: "Pets" },
-    { id: 7, name: "Builder's Toolkit", price: "R$ 34,99", description: "Kit completo de ferramentas para construtores profissionais.", category: "Ferramentas" },
-    { id: 8, name: "Teleport Scroll", price: "R$ 12,99", description: "Pergaminho mágico para teletransporte instantâneo.", category: "Magia" },
-    { id: 9, name: "Experience Booster", price: "R$ 18,99", description: "Multiplicador de experiência por 24 horas.", category: "Boosters" },
+    // Passes
+    { id: 1, name: "Passe VIP", price: "R$ 49,99", 
+      description: "Acesso VIP por 30 dias.", 
+      category: "Passes" },
+
+    // Pacotes
+    { id: 2, name: "Pacote de Moeda", price: "R$ 29,99", discountPrice: "R$ 19,99", 
+      description: "Pacote com 1000 moedas.", 
+      category: "Pacotes", subcategory: "Pacote de Moeda", 
+      image: "/products/packs/product-coin-medium.png" },
+    { id: 3, name: "Pacote de Dinheiro", price: "R$ 59,99", 
+      description: "Pacote com 5000 dinheiro.", 
+      category: "Pacotes", subcategory: "Pacote de Dinheiro", 
+      image: "/products/packs/product-money-high.png" },
+
+    // Boosters
+    { id: 4, name: "Experience Booster", price: "R$ 18,99", 
+      description: "Multiplicador de experiência por 24 horas.", 
+      category: "Boosters" },
+
+    // Diversos
+    { id: 5, name: "Teleport Scroll", price: "R$ 12,99", 
+      description: "Pergaminho mágico para teletransporte instantâneo.", 
+      category: "Diversos" },
+    { id: 6, name: "Magic Potion Pack", price: "R$ 15,99", 
+      description: "Pacote com 10 poções mágicas variadas.", 
+      category: "Diversos" },
+
+    // Cosmeticos
+    { id: 7, name: "Skin de Dragão", price: "R$ 39,99", 
+      description: "Skin exclusiva de dragão.", 
+      category: "Cosmeticos", subcategory: "Skins" },
+    { id: 8, name: "Asa Flamejante", price: "R$ 44,99", 
+      description: "Asa com efeito flamejante.", 
+      category: "Cosmeticos", subcategory: "Asas" },
+    { id: 9, name: "Mochila Gamer", price: "R$ 24,99", 
+      description: "Mochila temática gamer.", 
+      category: "Cosmeticos", subcategory: "Mochilas" },
   ]
 
   // Extrai categorias únicas automaticamente
   const categories = ["Todas", ...Array.from(new Set(products.map(p => p.category)))]
 
-  // Filtra produtos pela categoria selecionada
+  // Extrai subcategorias da categoria selecionada
+  const subcategories = selectedCategory === "Todas"
+    ? []
+    : Array.from(new Set(products.filter(p => p.category === selectedCategory && p.subcategory).map(p => p.subcategory))).filter((sub): sub is string => typeof sub === 'string')
+
+  // Estado para subcategoria selecionada
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null)
+
+  // Filtra produtos pela categoria e subcategoria selecionada
   const filteredProducts = selectedCategory === "Todas"
     ? products
-    : products.filter(p => p.category === selectedCategory)
+    : products.filter(p => {
+        if (!selectedSubcategory) return p.category === selectedCategory
+        return p.category === selectedCategory && p.subcategory === selectedSubcategory
+      })
 
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage)
   const startIndex = (currentPage - 1) * productsPerPage
@@ -67,6 +108,13 @@ export default function Component() {
           selectedCategory={selectedCategory}
           onCategoryChange={(cat) => {
             setSelectedCategory(cat)
+            setSelectedSubcategory(null)
+            setCurrentPage(1)
+          }}
+          subcategories={subcategories}
+          selectedSubcategory={selectedSubcategory}
+          onSubcategoryChange={(sub) => {
+            setSelectedSubcategory(sub)
             setCurrentPage(1)
           }}
         />
@@ -80,8 +128,9 @@ export default function Component() {
                 alt="Craft City Logo"
                 width={300}
                 height={300}
-                className="mx-auto"
+                className="mx-auto -z-999"
                 priority
+                style={{ opacity: 1 }}
               />
             </div>
           </div>

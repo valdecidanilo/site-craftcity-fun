@@ -17,7 +17,7 @@ export const footerRow =
   "flex items-center justify-between"
 
 export const price =
-  "text-[#9bf401] font-bold text-lg"
+  "text-[#9bf401] font-bold" + " " + ""
 
 export const buyButton =
-  "bg-[#9bf401] hover:bg-[#354b24] text-black font-semibold px-4 py-2 rounded-lg"
+  "bg-[#9bf401] hover:bg-[#354b24] text-black font-semibold rounded-lg"
