@@ -18,7 +18,7 @@ export default function Component() {
   
 
   // Mock products data com categoria e subcategoria
-  const products = [
+  const productsRaw = [
     // Passes
     { id: 1, name: "Passe VIP", price: "R$ 49,99", 
       description: "Acesso VIP por 30 dias.", 
@@ -57,7 +57,9 @@ export default function Component() {
     { id: 9, name: "Mochila Gamer", price: "R$ 24,99", 
       description: "Mochila temática gamer.", 
       category: "Cosmeticos", subcategory: "Mochilas" },
-  ]
+  ];
+
+  const products = productsRaw.map(p => ({ ...p, isDiscounted: !!p.discountPrice }));
 
   // Extrai categorias únicas automaticamente
   const categories = ["Todas", ...Array.from(new Set(products.map(p => p.category)))]
@@ -85,9 +87,9 @@ export default function Component() {
 
   return (
     <div className="min-h-screen text-white" style={{background: '#151923' }}>
-
-      <Header />
-
+      <div className="w-full fixed top-0 left-0 z-50">
+        <Header />
+      </div>
       <div className="relative w-full flex">
         <div
           className="absolute left-0 top-0 w-full -z-99"

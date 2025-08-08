@@ -2,7 +2,10 @@ import { Button } from "@/components/button/button"
 import * as style from "@/components/product-card/styles"
 import { ShoppingCart } from "lucide-react"
 
-import { pagarProduto } from '@/lib/api'
+
+import { useCart } from '../cart/CartContext';
+import { useRouter } from 'next/navigation';
+import { pagarProduto } from "@/lib/api";
 
 
 export interface ProductCardProps {
@@ -18,6 +21,8 @@ export interface ProductCardProps {
 
 export function ProductCard(props: ProductCardProps) {
   const { id, name, price, discountPrice, image, description } = props;
+  const { addToCart } = useCart();
+  const router = useRouter();
   return (
     <div className={style.cardWrapper}>
       {image ? (
@@ -49,16 +54,14 @@ export function ProductCard(props: ProductCardProps) {
           <Button
             className={style.buyButton + ' flex-1'}
             style={{ fontSize: '20px' }}
-            onClick={async () => {
-              try {
-                const result = await pagarProduto({ ...props, category: props.category })
-                const url = result?.point_of_interaction?.transaction_data?.ticket_url || 
-                  result?.init_point || result?.sandbox_init_point
-                if (url) window.open(url, 'mercadopago', 'width=600,height=800');
-                else alert('Erro ao gerar pagamento!')
-              } catch (err) {
-                alert('Erro ao gerar pagamento!')
-              }
+            onClick={() => {
+              addToCart({
+                ...props,
+                id: String(props.id),
+                price: Number(props.discountPrice ?? props.price?.replace(/[^\d.,]/g, '').replace(',', '.') ?? 0)
+              });
+              // Para redirecionar automaticamente, descomente a linha abaixo:
+              router.push('/cart');
             }}
           >
             Adicionar ao carrinho

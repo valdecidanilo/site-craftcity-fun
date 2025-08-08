@@ -8,15 +8,15 @@ export function Header() {
       <div className={styles.headerContainer}>
         <div className={styles.headerRow + ' flex justify-between items-center'}>
           {/* Esquerda */}
-          <div className="flex items-center gap-2 text-white font-semibold text-lg">
+          <a href="/" className="flex items-center gap-2 text-white font-semibold text-lg hover:text-[#9bf401] transition">
             <Home className="w-6 h-6" /> Inicio
-          </div>
+          </a>
 
           {/* Direita */}
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-white font-semibold text-lg">
+            <a href="/cart" className="flex items-center gap-2 text-white font-semibold text-lg hover:text-[#9bf401] transition">
               <ShoppingCart className="w-6 h-6" /> Carrinho
-            </div>
+            </a>
             <Button className={styles.headerButton}>
               <Store className="w-5 h-5" /> Loja
             </Button>

@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       'https://api.mercadopago.com/v1/payments',
       {
         ...req.body,
-        payment_method_id: req.body.payment_method_id || 'pix' // valor padrão se não vier do frontend
+        payment_method_id: req.body.payment_method_id || 'pix'
       },
       {
         headers: {
