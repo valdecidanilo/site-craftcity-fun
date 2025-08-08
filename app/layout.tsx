@@ -1,13 +1,15 @@
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import './globals.css'
+
+import type { Metadata } from 'next';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
+import './globals.css';
+import { CartProvider } from '../components/cart/CartContext';
 
 export const metadata: Metadata = {
   title: 'Craft City',
   description: 'Created with v0',
   generator: 'v0.dev',
-}
+};
 
 export default function RootLayout({
   children,
@@ -15,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+        <html lang="pt">
       <head>
         <style>{`
 html {
@@ -25,7 +27,11 @@ html {
 }
         `}</style>
       </head>
-      <body>{children}</body>
+          <body>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </body>
     </html>
   )
 }

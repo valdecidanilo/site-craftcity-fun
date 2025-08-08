@@ -31,35 +31,56 @@ export function ProductCard(props: ProductCardProps) {
       <div className={style.contentWrapper}>
         <h3 className={style.title}>{name}</h3>
         <p className={style.description}>{description}</p>
-        <div className={style.footerRow + ' gap-4'}>
-          <div className="flex-1 flex flex-col items-start">
-            {discountPrice ? (
-              <>
-                <span className={style.price + ' line-through text-red-400'} style={{ fontSize: '20px' }}>{price}</span>
-                <span className={style.price + ' text-green-400 font-bold'} style={{ fontSize: '22px' }}>{discountPrice}</span>
-              </>
-            ) : (
-              <span className={style.price} style={{ fontSize: '20px' }}>{price}</span>
-            )}
-          </div>
-          <div className="flex items-end justify-end" style={{ flex: 'none', width: 'auto' }}>
-            <Button
-              className={style.buyButton}
-              icon={<ShoppingCart size={22} />}
-              style={{ fontSize: '20px', width: '120px' }}
-              onClick={async () => {
-                try {
-                  const url = await pagarProduto({ ...props, category: props.category })
-                  if (url) window.open(url, '_blank')
-                  else alert('Erro ao gerar pagamento!')
-                } catch (err) {
-                  alert('Erro ao gerar pagamento!')
-                }
-              }}
-            >
-              Comprar
-            </Button>
-          </div>
+
+        {/* Preço em cima, largura total, alinhado à esquerda */}
+        <div className="w-full mb-4 flex flex-col">
+          {discountPrice ? (
+            <>
+              <span className={style.price + ' line-through text-red-400 mr-2'} style={{ fontSize: '15px' }}>{price}</span>
+              <span className={style.price + ' text-[#9bf401] font-bold'} style={{ fontSize: '20px' }}>{discountPrice}</span>
+            </>
+          ) : (
+            <span className={style.price} style={{ fontSize: '20px' }}>{price}</span>
+          )}
+        </div>
+
+        {/* Botões em uma row, largura total, abaixo do preço */}
+        <div className="w-full flex flex-col gap-4 mt-2">
+          <Button
+            className={style.buyButton + ' flex-1'}
+            style={{ fontSize: '20px' }}
+            onClick={async () => {
+              try {
+                const result = await pagarProduto({ ...props, category: props.category })
+                const url = result?.point_of_interaction?.transaction_data?.ticket_url || 
+                  result?.init_point || result?.sandbox_init_point
+                if (url) window.open(url, 'mercadopago', 'width=600,height=800');
+                else alert('Erro ao gerar pagamento!')
+              } catch (err) {
+                alert('Erro ao gerar pagamento!')
+              }
+            }}
+          >
+            Adicionar ao carrinho
+          </Button>
+          <Button
+            className={style.buyButton + ' flex-1'}
+            icon={<ShoppingCart size={22} />}
+            style={{ fontSize: '20px' }}
+            onClick={async () => {
+              try {
+                const result = await pagarProduto({ ...props, category: props.category })
+                const url = result?.point_of_interaction?.transaction_data?.ticket_url || 
+                  result?.init_point || result?.sandbox_init_point
+                if (url) window.open(url, 'mercadopago', 'width=600,height=800');
+                else alert('Erro ao gerar pagamento!')
+              } catch (err) {
+                alert('Erro ao gerar pagamento!')
+              }
+            }}
+          >
+            Comprar
+          </Button>
         </div>
       </div>
     </div>

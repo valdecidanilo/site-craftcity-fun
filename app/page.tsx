@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import Image from "next/image"
 import { Home, ShoppingCart, Store, Menu, ChevronRight } from 'lucide-react'
@@ -150,6 +149,12 @@ export default function Component() {
           </div>
         </main>
       </div>
+
+      {/* Floating cart link */}
+      <a href="/cart" className="fixed bottom-8 right-8 z-50 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 hover:bg-green-600">
+        <ShoppingCart size={24} />
+        Carrinho
+      </a>
 
       <Footer />
     </div>
