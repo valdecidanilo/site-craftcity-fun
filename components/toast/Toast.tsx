@@ -20,7 +20,8 @@ export function Toast({ message, duration = 3000, onClose }: ToastProps) {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-[#181c2b] text-white rounded-lg shadow-lg font-semibold text-center animate-fade-in">
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-[#181c2b] text-white rounded-lg shadow-lg font-semibold text-center animate-fade-in"
+    style={{ color: '#9bf401' }}>
       {message}
     </div>
   );
