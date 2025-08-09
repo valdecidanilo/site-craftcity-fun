@@ -6,7 +6,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export function UserMenu({ onClick }: { onClick?: () => void }) {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -24,6 +24,7 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
+
 
   if (!session) {
     // não logado → abre modal de login/registro como já fazia
@@ -96,6 +97,7 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
 }
 
 function QuickNick() {
+  const { update } = useSession();
   const [nick, setNick] = useState('');
   const [saving, setSaving] = useState(false);
   const [ok, setOk] = useState<null | boolean>(null);
@@ -122,6 +124,10 @@ function QuickNick() {
                 body: JSON.stringify({ nickname: nick.trim() }),
               });
               setOk(res.ok);
+              if (res.ok) {
+                // Force session update to reflect changes
+                await update();
+              }
             } finally {
               setSaving(false);
             }
