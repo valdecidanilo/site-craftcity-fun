@@ -1,8 +1,14 @@
 import { Home, ShoppingCart, Store } from "lucide-react"
 import { Button } from "@/components/button/button"
 import * as styles from "@/components/header/styles"
+import { UserMenu } from "./UserMenu"
+import { useState } from 'react';
+import { UserProfileModal } from './UserProfileModal';
 
 export function Header() {
+  function openUserProfileModal() {
+    window.dispatchEvent(new CustomEvent('open-user-profile-modal'));
+  }
   return (
     <header className={styles.headerWrapper}>
       <div className={styles.headerContainer}>
@@ -20,6 +26,7 @@ export function Header() {
             <Button className={styles.headerButton}>
               <Store className="w-5 h-5" /> Loja
             </Button>
+            <UserMenu onClick={openUserProfileModal} />
           </div>
         </div>
       </div>

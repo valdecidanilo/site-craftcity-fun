@@ -1,4 +1,4 @@
-
+import { UserProfileModalGlobal } from './UserProfileModalGlobal';
 import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
@@ -11,13 +11,9 @@ export const metadata: Metadata = {
   generator: 'v0.dev',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-        <html lang="pt">
+    <html lang="pt">
       <head>
         <style>{`
 html {
@@ -27,11 +23,12 @@ html {
 }
         `}</style>
       </head>
-          <body>
-            <CartProvider>
-              {children}
-            </CartProvider>
-          </body>
+      <body>
+        <CartProvider>
+          {children}
+        </CartProvider>
+        <UserProfileModalGlobal />
+      </body>
     </html>
-  )
+  );
 }

@@ -51,3 +51,5 @@ turbo/
 
 # Mac ._ files
 **/._*
+
+/lib/generated/prisma
