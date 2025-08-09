@@ -12,9 +12,31 @@ export default function CheckoutPage() {
     setIsClient(true);
   }, []);
 
-  function handleConfirm() {
-    alert(`Compra confirmada via ${paymentMethod}!`);
-    clearCart();
+  async function handleConfirm() {
+    if (cart.length === 0) return;
+    try {
+      const response = await fetch('/api/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart,
+          paymentMethod, // opcional (pode usar pra default no server)
+        }),
+      });
+      const data = await response.json();
+
+      if (response.ok && data?.init_point) {
+        // Usa sandbox_init_point se disponível (modo teste), senão usa init_point (produção)
+        const redirectUrl = data.sandbox_init_point || data.init_point;
+        window.location.href = redirectUrl;
+      } else {
+        console.error('Erro na resposta da API:', data);
+        alert('Erro ao processar pagamento: ' + (data?.message || data?.error || 'Desconhecido'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao conectar com o servidor de pagamento');
+    }
   }
 
   if (!isClient) {

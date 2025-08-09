@@ -13,4 +13,4 @@ const handler = NextAuth({
     AzureAD({ clientId: process.env.MICROSOFT_CLIENT_ID!, clientSecret: process.env.MICROSOFT_CLIENT_SECRET! }),
   ],
 });
-export { handler as GET, handler as POST }
+export { GET, POST } from "@/services/auth";

@@ -1,10 +1,10 @@
-import { UserProfileModalGlobal } from './UserProfileModalGlobal';
+import { UserProfileModalGlobal } from './utils/UserProfileModalGlobal';
 import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { CartProvider } from '../components/cart/CartContext';
-import SessionProviderWrapper from './SessionProviderWrapper';
+import SessionProviderWrapper from './utils/SessionProviderWrapper';
 
 export const metadata: Metadata = {
   title: 'Craft City',

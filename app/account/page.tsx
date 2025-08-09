@@ -108,15 +108,11 @@ export default function AccountPage() {
         <Header />
       </div>
         <main className="flex-1 flex flex-col items-center p-8 pt-[10rem] space-y-12">
-          <div className="w-full max-w-3xl">
+          <div className="w-full w-2/6">
             <h1 className="text-2xl font-bold mb-4">Meu Perfil</h1>
 
-            {msg && (
-              <div className={`mb-4 ${msg.includes('Erro') ? 'text-red-400' : 'text-green-400'}`}>{msg}</div>
-            )}
-
             {/* Card no mesmo estilo da loja (bg, borda, radius) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#181c2b] p-6 rounded-xl border border-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 bg-[#181c2b] p-6 rounded-xl border border-white/10">
               <Field label="Email" value={form.email} disabled onChange={() => {}} />
               <Field
                 label="Nickname Minecraft"
@@ -124,14 +120,11 @@ export default function AccountPage() {
                 onChange={(v) => setForm((f) => ({ ...f, nickname: v }))}
               />
               <Field label="Nome" value={form.nome} onChange={(v) => setForm((f) => ({ ...f, nome: v }))} />
-              <Field
-                label="Sobrenome"
-                value={form.sobrenome}
-                onChange={(v) => setForm((f) => ({ ...f, sobrenome: v }))}
-              />
               <Field label="Idade" type="number" value={form.idade} onChange={(v) => setForm((f) => ({ ...f, idade: v }))} />
             </div>
-
+            {msg && (
+              <div className={`mb-4 ${msg.includes('Erro') ? 'text-red-400' : 'text-green-400'}`}>{msg}</div>
+            )}
             <div className="flex gap-3 mt-6 justify-center">
               <button
                 onClick={save}
