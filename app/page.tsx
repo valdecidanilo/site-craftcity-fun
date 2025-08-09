@@ -20,43 +20,72 @@ export default function Component() {
   // Mock products data com categoria e subcategoria
   const productsRaw = [
     // Passes
-    { id: 1, name: "Passe VIP", price: "R$ 49,99", 
+    { id: 1, name: "Apoiar 🤝 1 mês", price: "R$ 4,99", 
+      description: "Acesso Apoiador por 30 dias.", 
+      category: "Passes",
+      image: "/products/pass/product-apoiador.png"
+    },
+    { id: 2, name: "Craft Club ⛏️ 1 mês", price: "R$ 9,99", 
+      description: "Acesso Craft Club por 30 dias.", 
+      category: "Passes",
+      image: "/products/pass/product-craftclub.png"
+    },
+    { id: 3, name: "VIP 💎 1 mês", price: "R$ 14,99", 
       description: "Acesso VIP por 30 dias.", 
-      category: "Passes" },
+      category: "Passes" ,
+      image: "/products/pass/product-vip.png"
+    },
 
     // Pacotes
-    { id: 2, name: "Pacote de Moeda", price: "R$ 29,99", discountPrice: "R$ 19,99", 
-      description: "Pacote com 1000 moedas.", 
+    { id: 4, name: "G Coin 320", price: "R$ 1,99", 
+      description: "Pacote com 320 moedas.", 
+      category: "Pacotes", subcategory: "Pacote de Moeda", 
+      image: "/products/packs/product-coin-low.png" },
+    { id: 5, name: "G Coin 860", price: "R$ 5,38", 
+      description: "Pacote com 860 + 40 moedas.", 
       category: "Pacotes", subcategory: "Pacote de Moeda", 
       image: "/products/packs/product-coin-medium.png" },
-    { id: 3, name: "Pacote de Dinheiro", price: "R$ 59,99", 
-      description: "Pacote com 5000 dinheiro.", 
+    { id: 6, name: "G Coin 2700", price: "R$ 29,99", discountPrice: "R$ 24,99", 
+      description: "Pacote com 2700 + 300 moedas.", 
+      category: "Pacotes", subcategory: "Pacote de Moeda", 
+      image: "/products/packs/product-coin-high.png" },
+    { id: 7, name: "Cash 💵 320", price: "R$ 7,99", 
+      description: "Pacote com 320 dinheiro.", 
+      category: "Pacotes", subcategory: "Pacote de Dinheiro", 
+      image: "/products/packs/product-money-low.png" },
+    { id: 8, name: "Cash 💵 860 + 40", price: "R$ 21,50", 
+      description: "Pacote com 860 + 40 dinheiro.", 
+      category: "Pacotes", subcategory: "Pacote de Dinheiro", 
+      image: "/products/packs/product-money-medium.png" },
+    { id: 9, name: "Cash 💵 2700 + 300", price: "R$ 67,50", 
+      description: "Pacote com 2700 + 300 dinheiro.", 
       category: "Pacotes", subcategory: "Pacote de Dinheiro", 
       image: "/products/packs/product-money-high.png" },
 
     // Boosters
-    { id: 4, name: "Experience Booster", price: "R$ 18,99", 
+    { id: 10, name: "Experience Booster", price: "R$ 18,99", 
       description: "Multiplicador de experiência por 24 horas.", 
       category: "Boosters" },
 
     // Diversos
-    { id: 5, name: "Teleport Scroll", price: "R$ 12,99", 
+    { id: 11, name: "Teleport Scroll", price: "R$ 12,99", 
       description: "Pergaminho mágico para teletransporte instantâneo.", 
       category: "Diversos" },
-    { id: 6, name: "Magic Potion Pack", price: "R$ 15,99", 
+    { id: 12, name: "Magic Potion Pack", price: "R$ 15,99", 
       description: "Pacote com 10 poções mágicas variadas.", 
       category: "Diversos" },
 
     // Cosmeticos
-    { id: 7, name: "Skin de Dragão", price: "R$ 39,99", 
+    /*
+    { id: 13, name: "Skin de Dragão", price: "R$ 39,99", 
       description: "Skin exclusiva de dragão.", 
       category: "Cosmeticos", subcategory: "Skins" },
-    { id: 8, name: "Asa Flamejante", price: "R$ 44,99", 
+    { id: 14, name: "Asa Flamejante", price: "R$ 44,99", 
       description: "Asa com efeito flamejante.", 
       category: "Cosmeticos", subcategory: "Asas" },
-    { id: 9, name: "Mochila Gamer", price: "R$ 24,99", 
+    { id: 15, name: "Mochila Gamer", price: "R$ 24,99", 
       description: "Mochila temática gamer.", 
-      category: "Cosmeticos", subcategory: "Mochilas" },
+      category: "Cosmeticos", subcategory: "Mochilas" },*/
   ];
 
   const products = productsRaw.map(p => ({ ...p, isDiscounted: !!p.discountPrice }));

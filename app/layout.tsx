@@ -4,6 +4,7 @@ import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { CartProvider } from '../components/cart/CartContext';
+import SessionProviderWrapper from './SessionProviderWrapper';
 
 export const metadata: Metadata = {
   title: 'Craft City',
@@ -24,10 +25,12 @@ html {
         `}</style>
       </head>
       <body>
-        <CartProvider>
-          {children}
-        </CartProvider>
-        <UserProfileModalGlobal />
+        <SessionProviderWrapper>
+          <CartProvider>
+            {children}
+            <UserProfileModalGlobal />
+          </CartProvider>
+        </SessionProviderWrapper>
       </body>
     </html>
   );

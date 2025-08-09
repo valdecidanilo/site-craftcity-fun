@@ -7,6 +7,9 @@ import { useCart } from '../cart/CartContext';
 import { useRouter } from 'next/navigation';
 import { pagarProduto } from "@/lib/api";
 
+import Image from 'next/image';
+import DefaultImage from '@/public/products/product-default.png';
+
 
 export interface ProductCardProps {
   id: number
@@ -26,11 +29,17 @@ export function ProductCard(props: ProductCardProps) {
   return (
     <div className={style.cardWrapper}>
       {image ? (
-        <div className={style.imagePlaceholder + ' flex items-center justify-center bg-white'}>
-          <img src={image} alt={name} className="h-36 w-auto object-contain" />
+        <div className={style.imagePlaceholder + ' flex items-center justify-center'}>
+          <img src={image} alt={name} className="rounded-xl h-36 w-auto object-contain" />
         </div>
       ) : (
-        <div className={style.imagePlaceholder}></div>
+        <div className={style.imagePlaceholder + ' flex items-center justify-center'}>
+          <Image
+            src={DefaultImage}
+            alt={name}
+            className="rounded-xl h-36 w-auto object-contain"
+          />
+        </div>
       )}
 
       <div className={style.contentWrapper}>

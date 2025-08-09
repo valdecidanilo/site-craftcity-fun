@@ -8,6 +8,9 @@ import { useCart } from '../../components/cart/CartContext';
 
 export default function CartPage() {
   const { cart } = useCart();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const canCheckout = mounted && cart.length > 0;
   const [toast, setToast] = useState<{ message: string; duration?: number } | null>(null);
 
   useEffect(() => {
@@ -36,9 +39,16 @@ export default function CartPage() {
           <Cart />
           <div className="mt-8 flex justify-end">
             <a
-              href={cart.length > 0 ? "/checkout" : "#"}
-              className={`px-6 py-3 rounded-lg font-bold text-lg shadow transition ${cart.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-600 text-gray-300 cursor-not-allowed'}`}
-              onClick={handleCheckoutClick}
+              href="/checkout" // href constante evita mismatch
+              onClick={(e) => {
+                if (!canCheckout) {
+                  e.preventDefault();
+                  notify('Seu carrinho está vazio!', 3000);
+                }
+              }}
+              className={`px-6 py-3 rounded-lg font-bold text-lg shadow transition ${
+                canCheckout ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+              }`}
             >
               Confirmar compra
             </a>
