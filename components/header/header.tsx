@@ -47,9 +47,9 @@ export function Header() {
                 </span>
               )}
             </a>
-            <Button className={styles.headerButton}>
-              <Store className="w-5 h-5" /> Loja
-            </Button>
+            {/*<Button className={styles.headerButton + " justify-center"}>
+                <Store className="w-5 h-5" /> Loja
+              </Button>*/}
             {isAdmin && (
               <a href="/admin/dashboard" className="flex items-center gap-2 text-white font-semibold text-lg hover:text-[#9bf401] transition">
                 <Settings className="w-6 h-6" /> Admin
@@ -83,9 +83,9 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden absolute top-full left-0 w-full bg-[#181c2b] border-t border-[#23263a] z-50">
             <div className="flex flex-col p-4 space-y-4">
-              <Button className={styles.headerButton + " justify-center"}>
+              {/*<Button className={styles.headerButton + " justify-center"}>
                 <Store className="w-5 h-5" /> Loja
-              </Button>
+              </Button>*/}
               {isAdmin && (
                 <a
                   href="/admin/dashboard"

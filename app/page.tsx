@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Image from "next/image"
-import { Home, ShoppingCart, Store, Menu, ChevronRight } from 'lucide-react'
+import { ShoppingCart, SlidersHorizontal } from 'lucide-react'
 import { ProductCard } from "@/components/product-card/product-card"
 import { Pagination } from "@/components/pagination/pagination"
 
@@ -26,6 +26,7 @@ type Product = {
 export default function Component() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState('Todas')
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -38,9 +39,7 @@ export default function Component() {
         setLoading(true)
         setError(null)
         const response = await fetch('/api/products')
-        if (!response.ok) {
-          throw new Error('Erro ao carregar produtos')
-        }
+        if (!response.ok) throw new Error('Erro ao carregar produtos')
         const data = await response.json()
         setProducts(data)
       } catch (err) {
@@ -50,22 +49,17 @@ export default function Component() {
         setLoading(false)
       }
     }
-
     fetchProducts()
   }, [])
 
-  // Extrai categorias únicas automaticamente
   const categories = ["Todas", ...Array.from(new Set((products || []).map(p => p.category)))]
-
-  // Extrai subcategorias da categoria selecionada
   const subcategories = selectedCategory === "Todas"
     ? []
-    : Array.from(new Set((products || []).filter(p => p.category === selectedCategory && p.subcategory).map(p => p.subcategory))).filter((sub): sub is string => typeof sub === 'string')
+    : Array.from(new Set((products || [])
+        .filter(p => p.category === selectedCategory && p.subcategory)
+        .map(p => p.subcategory)))
+        .filter((sub): sub is string => typeof sub === 'string')
 
-  // Estado para subcategoria selecionada
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null)
-
-  // Filtra produtos pela categoria e subcategoria selecionada
   const filteredProducts = selectedCategory === "Todas"
     ? (products || [])
     : (products || []).filter(p => {
@@ -77,23 +71,21 @@ export default function Component() {
   const startIndex = (currentPage - 1) * productsPerPage
   const currentProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage)
 
-
   return (
-    <div className="min-h-screen text-white flex flex-col" style={{background: '#151923' }}>
+    <div className="min-h-screen text-white flex flex-col" style={{ background: '#151923' }}>
+      {/* Header fixo (z-50) */}
       <div className="w-full fixed top-0 left-0 z-50">
         <Header />
       </div>
+
       <div className="relative w-full flex flex-1">
-        <div
-          className="absolute left-0 top-0 w-full z-0"
-          style={{ height: 400}}
-        >
+        {/* BG image */}
+        <div className="absolute left-0 top-0 w-full z-0" style={{ height: 400 }}>
           <Image
             src={Background}
             alt="Background Craft City"
             fill
-            style={{ objectFit: 'cover', 
-              objectPosition: 'center' , opacity: .5 }}
+            style={{ objectFit: 'cover', objectPosition: 'center', opacity: .5 }}
             priority
           />
         </div>
@@ -117,10 +109,16 @@ export default function Component() {
           />
         </div>
 
-        {/* Mobile Sidebar Overlay */}
+        {/* Sidebar - Mobile (Overlay abaixo do header, acima do resto) */}
         {sidebarOpen && (
-          <div className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)}>
-            <div className="absolute left-0 top-0 h-full w-80 bg-[#181c2b] pt-20" onClick={e => e.stopPropagation()}>
+          <div
+            className="lg:hidden fixed inset-0 z-[45] bg-black bg-opacity-50"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <div
+              className="absolute left-0 top-0 h-full w-80 bg-[#181c2b] pt-20 z-[46]"
+              onClick={e => e.stopPropagation()}
+            >
               <Sidebar
                 categories={categories}
                 selectedCategory={selectedCategory}
@@ -143,18 +141,8 @@ export default function Component() {
         )}
 
         {/* Main */}
-        <main className="flex-1 flex flex-col items-center p-4 lg:p-8 space-y-8 lg:space-y-12">
-          {/* Mobile Category Filter Button */}
-          <div className="lg:hidden w-full flex justify-center mb-4">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="bg-[#9bf401] text-[#151923] px-6 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-[#7fa001] transition"
-            >
-              <Menu className="w-5 h-5" />
-              Filtrar por Categoria
-            </button>
-          </div>
-
+        <main className="flex-1 flex flex-col items-center p-4 lg:p-8 space-y-8 lg:space-y-12 pt-20 lg:pt-24">
+          {/* Logo */}
           <div className="w-full flex justify-center items-center" style={{ minHeight: 280 }}>
             <div className="text-center w-full">
               <Image
@@ -168,8 +156,34 @@ export default function Component() {
             </div>
           </div>
 
+          {/* Filtros Mobile (entre o logo e “Produtos”) */}
+          <div className="w-full max-w-6xl pt-4 px-4 lg:hidden">
+            <div className="bg-[#1c2230]/90 backdrop-blur-sm border border-[#1b202d] rounded-xl p-4 shadow">
+              <div className="flex flex-col gap-3 items-center text-center">
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold bg-[#9bf401] text-[#151923] w-full sm:w-auto"
+                >
+                  <SlidersHorizontal className="w-5 h-5" />
+                  Filtrar por Categoria
+                </button>
+
+                <div className="text-lg">
+                  <span className="text-white/70">Categoria: </span>
+                  <span className="font-semibold" style={{ color: '#9bf401' }}>
+                    {selectedCategory}
+                    {selectedSubcategory ? ` · ${selectedSubcategory}` : ''}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Listagem de produtos */}
           <div className="w-full max-w-6xl px-4 lg:px-0">
             <h2 className="text-white font-bold pt-5 text-2xl lg:text-3xl mb-6 lg:mb-8 text-center">Produtos</h2>
+
             {loading ? (
               <div className="flex justify-center items-center py-12">
                 <div className="text-white text-lg">Carregando produtos...</div>
@@ -185,6 +199,7 @@ export default function Component() {
                     <ProductCard key={product.id} {...product} />
                   ))}
                 </div>
+
                 {filteredProducts.length > 0 && (
                   <Pagination
                     currentPage={currentPage}
@@ -192,6 +207,7 @@ export default function Component() {
                     onPageChange={setCurrentPage}
                   />
                 )}
+
                 {filteredProducts.length === 0 && !loading && (
                   <div className="text-center text-gray-400 py-8">
                     Nenhum produto encontrado nesta categoria.
@@ -204,7 +220,10 @@ export default function Component() {
       </div>
 
       {/* Floating cart link */}
-      <a href="/cart" className="fixed bottom-4 right-4 lg:bottom-8 lg:right-8 z-50 bg-green-500 text-white px-4 py-2 lg:px-6 lg:py-3 rounded-full shadow-lg flex items-center gap-2 hover:bg-green-600 transition">
+      <a
+        href="/cart"
+        className="fixed bottom-4 right-4 lg:bottom-8 lg:right-8 z-50 bg-green-500 text-white px-4 py-2 lg:px-6 lg:py-3 rounded-full shadow-lg flex items-center gap-2 hover:bg-green-600 transition"
+      >
         <ShoppingCart size={20} className="lg:w-6 lg:h-6" />
         <span className="hidden sm:inline">Carrinho</span>
       </a>
