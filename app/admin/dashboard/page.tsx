@@ -79,6 +79,11 @@ export default function AdminDashboard() {
     subcategoryId: '',
   });
 
+  const [newCategory, setNewCategory] = useState('');
+  const [newSubcategory, setNewSubcategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [catSaving, setCatSaving] = useState(false);
+
   const BRL = useMemo(
     () => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }),
     []
@@ -252,6 +257,52 @@ export default function AdminDashboard() {
     }
   }
 
+  async function addCategory(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newCategory.trim()) return;
+    try {
+      setCatSaving(true);
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCategory.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Erro ao criar categoria');
+      setNewCategory('');
+      await loadCategories();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao criar categoria');
+    } finally {
+      setCatSaving(false);
+    }
+  }
+
+  async function addSubcategory(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedCategory || !newSubcategory.trim()) return;
+    try {
+      setCatSaving(true);
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newSubcategory.trim(),
+          categoryId: selectedCategory,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Erro ao criar subcategoria');
+      setNewSubcategory('');
+      setSelectedCategory('');
+      await loadCategories();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao criar subcategoria');
+    } finally {
+      setCatSaving(false);
+    }
+  }
+
   // --------- Guards render ----------
   if (status === 'loading' || adminLoading) {
     return (
@@ -289,10 +340,12 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-semibold text-white">Categorias & Subcategorias</h2>
           </div>
 
-          {categories.length === 0 ? (
-            <div className="text-white/70">Nenhuma categoria cadastrada.</div>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-6">
+          {categories.length === 0 && (
+            <div className="text-white/70 mb-4">Nenhuma categoria cadastrada.</div>
+          )}
+
+          {categories.length > 0 && (
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
               {categories.map((cat) => (
                 <div key={cat.id} className="rounded-lg bg-[#1b2132] border border-white/10 p-4">
                   <div className="flex items-center justify-between">
@@ -317,6 +370,54 @@ export default function AdminDashboard() {
               ))}
             </div>
           )}
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <form onSubmit={addCategory} className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Nova categoria"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                className="flex-1 bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
+              />
+              <Button
+                type="submit"
+                disabled={catSaving}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              >
+                Adicionar
+              </Button>
+            </form>
+
+            <form onSubmit={addSubcategory} className="flex gap-2">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
+              >
+                <option value="">Categoria</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Nova subcategoria"
+                value={newSubcategory}
+                onChange={(e) => setNewSubcategory(e.target.value)}
+                className="flex-1 bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
+              />
+              <Button
+                type="submit"
+                disabled={catSaving || !selectedCategory}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              >
+                Adicionar
+              </Button>
+            </form>
+          </div>
         </section>
 
         {/* Formulário de Produto */}
