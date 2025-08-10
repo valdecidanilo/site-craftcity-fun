@@ -14,6 +14,7 @@ services:
       - ./prisma-data:/app/prisma/data
     env_file:
       - .env
+      - .env.local
     environment:
       NODE_ENV: production
       NEXTAUTH_URL: ${NODE_ENV:+${NEXTAUTH_URL}}${NODE_ENV:development:+${NEXTAUTH_LOCAL_URL}}
