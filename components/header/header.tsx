@@ -1,9 +1,9 @@
 import { Home, ShoppingCart, Store, Settings, Menu, X } from "lucide-react"
 import { Button } from "@/components/button/button"
 import * as styles from "@/components/header/styles"
-import { UserMenu } from "./UserMenu"
+import { UserMenu } from "../auth/UserMenu"
 import { useState, useEffect } from 'react';
-import { UserProfileModal } from './UserProfileModal';
+import { UserProfileModal } from '../auth/UserProfileModal';
 import { useCart } from "@/components/cart/CartContext";
 import { useSession } from 'next-auth/react';
 
@@ -52,7 +52,7 @@ export function Header() {
               </Button>*/}
             {isAdmin && (
               <a href="/admin/dashboard" className="flex items-center gap-2 text-white font-semibold text-lg hover:text-[#9bf401] transition">
-                <Settings className="w-6 h-6" /> Admin
+                <Settings className="w-6 h-6" /> Dashboard
               </a>
             )}
             <UserMenu onClick={openUserProfileModal} />

@@ -59,7 +59,7 @@ export default function CheckoutPage() {
                 {cart.map(item => (
                   <li key={item.id} className="flex justify-between items-center py-4">
                     <span className="font-semibold">{item.name} <span className="text-gray-400">x {item.quantity}</span></span>
-                    <span className="font-bold">{item.price}</span>
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.price)}
                   </li>
                 ))}
               </ul>

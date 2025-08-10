@@ -1,5 +1,5 @@
 export const cardWrapper =
-  "bg-[#1c2230]/90 backdrop-blur-sm rounded-xl p-4 lg:p-6 border border-[#1b202d] hover:border-[#9bf401]/50 transition-colors min-w-[244px]"
+  "bg-[#1c2230]/90 backdrop-blur-sm rounded-xl p-4 lg:p-6 border border-[#1b202d] hover:border-[#9bf401]/50 transition-colors min-w-[256px]"
 
 export const imagePlaceholder =
   "rounded-lg h-40 lg:h-48 w-full mb-3 lg:mb-4"

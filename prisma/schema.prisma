@@ -1,11 +1,10 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL") // ex: file:./dev.db
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -15,11 +14,10 @@ model User {
   emailVerified  DateTime?
   image          String?
 
-  // seus extras
   nickname       String?   @unique
   idade          Int?
-  senha          String?   // deixe opcional; OAuth não usa senha
-  provider       String?   // "google", "microsoft", "email"
+  senha          String?
+  provider       String?
   isAdmin        Boolean   @default(false)
 
   accounts       Account[]
@@ -62,15 +60,42 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Category {
+  id             String         @id @default(cuid())
+  name           String
+  slug           String         @unique
+  isActive       Boolean        @default(true)
+  order          Int            @default(0)
+  products       Product[]
+  subcategories  Subcategory[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Subcategory {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  isActive    Boolean   @default(true)
+  order       Int       @default(0)
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 model Product {
-  id            String   @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String
-  price         String
-  discountPrice String?
+  price         Float
+  discountPrice Float?
   description   String
-  category      String
-  subcategory   String?
+  categoryId    String
+  category      Category      @relation(fields: [categoryId], references: [id])
+  subcategoryId String?
+  subcategory   Subcategory?  @relation(fields: [subcategoryId], references: [id])
   image         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }

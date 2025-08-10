@@ -50,7 +50,7 @@ export default function CartPage() {
                 canCheckout ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-600 text-gray-300 cursor-not-allowed'
               }`}
             >
-              Confirmar compra
+              Próximo Passo
             </a>
           </div>
         </div>

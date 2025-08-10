@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { UserProfileModal } from '../../components/header/UserProfileModal';
+import { UserProfileModal } from '../../components/auth/UserProfileModal';
 
 export function UserProfileModalGlobal() {
   const [profileOpen, setProfileOpen] = useState(false);

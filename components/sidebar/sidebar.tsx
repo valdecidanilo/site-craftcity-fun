@@ -12,10 +12,7 @@ type SidebarProps = {
   onSubcategoryChange?: (subcategory: string) => void
 }
 
-// ...existing code...
-// Removido: definição duplicada da função Sidebar
 export function Sidebar({ categories, selectedCategory, onCategoryChange, subcategories = [], selectedSubcategory, onSubcategoryChange }: SidebarProps) {
-  // Mapeamento de ícones por categoria
   const categoryIcons: Record<string, React.ReactElement> = {
     Passes: <Ticket />,
     Pacotes: <Package />,
@@ -23,7 +20,6 @@ export function Sidebar({ categories, selectedCategory, onCategoryChange, subcat
     Diversos: <Boxes />,
     Cosmeticos: <Star />,
   }
-  // Mapeamento de ícones para subcategorias (exemplo, personalize conforme necessário)
   const subcategoryIcons: Record<string, React.ReactElement> = {
     VIP: <Crown />,
     "Passe Mensal": <Ticket />,
@@ -38,7 +34,6 @@ export function Sidebar({ categories, selectedCategory, onCategoryChange, subcat
     "Presente": <Gift />,
     "Medalha": <Medal />,
     "Usuário": <User />,
-    // Adicione outros conforme necessário
   }
   return (
     <aside className={styles.sidebarWrapper}>
