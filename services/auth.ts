@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -27,14 +28,15 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
-          select: { id: true, name: true, email: true, nickname: true, idade: true, image: true, senha: true, isAdmin: true }
+          select: { id: true, name: true, email: true, nickname: true, idade: true, 
+            image: true, senha: true, isAdmin: true }
         });
 
-        if (!user || user.senha !== credentials.senha) {
-          return null;
-        }
+        if (!user || !user.senha) return null;
 
-        // Remove senha do retorno
+        const ok = await bcrypt.compare(credentials.senha, user.senha);
+        if (!ok) return null;
+
         const { senha, ...userWithoutPassword } = user;
         return userWithoutPassword;
       }
