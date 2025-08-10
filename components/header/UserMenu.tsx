@@ -11,7 +11,7 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const userImage = session?.user?.image || '/placeholder-user.jpg';
+  const userImage = session?.user?.image || '/placeholder-user.png';
   const userName = (session?.user?.name as string) || 'Jogador';
   const userEmail = session?.user?.email || '';
 
