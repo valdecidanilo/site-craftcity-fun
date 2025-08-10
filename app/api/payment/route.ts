@@ -70,11 +70,11 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     const useTestMode = process.env.NODE_ENV === 'development';
 
-    const MP_ACCESS_TOKEN = useTestMode
+    const MECADOPAGO_ACCESS_TOKEN = process.env.MERCADOPAGO_SANDBOX
       ? process.env.MERCADOPAGO_ACCESS_TOKEN_TEST
       : process.env.MERCADOPAGO_ACCESS_TOKEN;
 
-    if (!MP_ACCESS_TOKEN) {
+    if (!MECADOPAGO_ACCESS_TOKEN) {
       console.error('[PAYMENT API] Missing MP token for mode:', useTestMode ? 'test' : 'prod');
       return NextResponse.json(
         { error: `Token do Mercado Pago não configurado para modo ${useTestMode ? 'teste' : 'produção'}` },
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+          'Authorization': `Bearer ${MECADOPAGO_ACCESS_TOKEN}`,
           'X-Idempotency-Key': crypto.randomUUID(),
         },
         body: JSON.stringify(pixPayload),
@@ -252,7 +252,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+        'Authorization': `Bearer ${MECADOPAGO_ACCESS_TOKEN}`,
         'X-Idempotency-Key': crypto.randomUUID(),
       },
       body: JSON.stringify(preferencePayload),
