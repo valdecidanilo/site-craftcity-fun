@@ -19,6 +19,8 @@ model User {
   nickname       String?   @unique
   idade          Int?
   senha          String?   // deixe opcional; OAuth não usa senha
+  provider       String?   // "google", "microsoft", "email"
+  isAdmin        Boolean   @default(false)
 
   accounts       Account[]
   sessions       Session[]
@@ -58,4 +60,17 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  price         String
+  discountPrice String?
+  description   String
+  category      String
+  subcategory   String?
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

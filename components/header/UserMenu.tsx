@@ -32,8 +32,9 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
       <button
         onClick={onClick}
         aria-label="Área do usuário"
-        className="ml-2 flex items-center p-0 bg-transparent border-none cursor-pointer"
+        className="ml-2 flex items-center gap-2 p-0 bg-transparent border-none cursor-pointer"
       >
+        <span className="text-white text-sm hidden sm:inline">Entrar</span>
         <Image
           src={userImage}
           alt="Usuário"
@@ -51,8 +52,11 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
       <button
         onClick={() => setOpen(v => !v)}
         aria-label="Menu do usuário"
-        className="flex items-center p-0 bg-transparent border-none cursor-pointer"
+        className="flex items-center gap-2 p-0 bg-transparent border-none cursor-pointer"
       >
+        <span className="text-white text-sm hidden sm:inline font-medium">
+          {userName}
+        </span>
         <Image
           src={userImage}
           alt={userName}

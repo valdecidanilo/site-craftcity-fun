@@ -12,15 +12,15 @@ export default function CheckoutSuccessPage() {
   }, []);
 
   return (
-    <div className="min-h-screen text-white" style={{ background: '#151923' }}>
+    <div className="min-h-screen text-white flex flex-col" style={{ background: '#151923' }}>
       <div className="w-full fixed top-0 left-0 z-50">
         <Header />
       </div>
-      <div className="pt-24 flex flex-col items-center justify-center">
-        <div className="w-full max-w-2xl mx-auto p-8 bg-[#181c2b] rounded-xl shadow-lg mt-12 mb-12 text-center">
+      <div className="pt-20 lg:pt-24 flex flex-col items-center justify-center px-4 flex-1">
+        <div className="w-full max-w-2xl mx-auto p-4 lg:p-8 bg-[#181c2b] rounded-xl shadow-lg mt-8 lg:mt-12 mb-8 lg:mb-12 text-center">
           <div className="text-green-500 text-6xl mb-6">✓</div>
-          <h2 className="text-3xl font-bold mb-4 text-green-500">Pagamento Aprovado!</h2>
-          <p className="text-lg mb-6">
+          <h2 className="text-2xl lg:text-3xl font-bold mb-4 text-green-500">Pagamento Aprovado!</h2>
+          <p className="text-base lg:text-lg mb-6">
             Sua compra foi processada com sucesso. Você receberá um e-mail de confirmação em breve.
           </p>
           <Link 

@@ -12,7 +12,7 @@ import DefaultImage from '@/public/products/product-default.png';
 
 
 export interface ProductCardProps {
-  id: number
+  id: string
   name: string
   price: string
   discountPrice?: string
@@ -66,7 +66,6 @@ export function ProductCard(props: ProductCardProps) {
             onClick={() => {
               addToCart({
                 ...props,
-                id: String(props.id),
                 price: Number(props.discountPrice ?? props.price?.replace(/[^\d.,]/g, '').replace(',', '.') ?? 0)
               });
               // Para redirecionar automaticamente, descomente a linha abaixo:

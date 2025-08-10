@@ -13,7 +13,7 @@ export async function GET(_req: NextRequest) {
     }
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { id: true, name: true, email: true, nickname: true, idade: true, image: true },
+      select: { id: true, name: true, email: true, nickname: true, idade: true, image: true, isAdmin: true },
     });
     if (!user) {
       return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404, headers: noStore });
@@ -22,6 +22,43 @@ export async function GET(_req: NextRequest) {
   } catch (e: any) {
     console.error("GET /api/user failed:", e);
     return NextResponse.json({ error: "Erro interno" }, { status: 500, headers: noStore });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json().catch(() => ({}));
+    const { email, senha, nome, nickname, idade } = body;
+    
+    if (!email || !senha) {
+      return NextResponse.json({ error: "Email e senha são obrigatórios" }, { status: 400, headers: noStore });
+    }
+
+    // Verifica se usuário já existe
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+    
+    if (existingUser) {
+      return NextResponse.json({ error: "Email já cadastrado" }, { status: 409, headers: noStore });
+    }
+
+    const created = await prisma.user.create({
+      data: {
+        email,
+        senha,
+        name: nome,
+        nickname,
+        idade: idade ? Number(idade) : null,
+        provider: "email"
+      },
+      select: { id: true, name: true, email: true, nickname: true, idade: true, image: true, isAdmin: true },
+    });
+
+    return NextResponse.json({ message: "Usuário criado com sucesso", ...created }, { headers: noStore });
+  } catch (e: any) {
+    console.error("POST /api/user failed:", e);
+    return NextResponse.json({ error: "Erro ao criar usuário" }, { status: 500, headers: noStore });
   }
 }
 
@@ -41,7 +78,7 @@ export async function PUT(req: NextRequest) {
     const updated = await prisma.user.update({
       where: { email: session.user.email },
       data,
-      select: { id: true, name: true, email: true, nickname: true, idade: true, image: true },
+      select: { id: true, name: true, email: true, nickname: true, idade: true, image: true, isAdmin: true },
     });
 
     return NextResponse.json({ message: "Atualizado com sucesso", ...updated }, { headers: noStore });

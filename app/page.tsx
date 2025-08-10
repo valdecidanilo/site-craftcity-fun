@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from "next/image"
 import { Home, ShoppingCart, Store, Menu, ChevronRight } from 'lucide-react'
 import { ProductCard } from "@/components/product-card/product-card"
@@ -11,100 +11,64 @@ import { Header } from '@/components/header/header'
 import { Footer } from '@/components/footer/footer'
 import { Sidebar } from '@/components/sidebar/sidebar'
 
+type Product = {
+  id: string
+  name: string
+  price: string
+  discountPrice?: string | null
+  description: string
+  category: string
+  subcategory?: string | null
+  image?: string | null
+  isDiscounted?: boolean
+}
+
 export default function Component() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState('Todas')
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const productsPerPage = 6
-  
 
-  // Mock products data com categoria e subcategoria
-  const productsRaw = [
-    // Passes
-    { id: 1, name: "Apoiar 🤝 1 mês", price: "R$ 4,99", 
-      description: "Acesso Apoiador por 30 dias.", 
-      category: "Passes",
-      image: "/products/pass/product-apoiador.png"
-    },
-    { id: 2, name: "Craft Club ⛏️ 1 mês", price: "R$ 9,99", 
-      description: "Acesso Craft Club por 30 dias.", 
-      category: "Passes",
-      image: "/products/pass/product-craftclub.png"
-    },
-    { id: 3, name: "VIP 💎 1 mês", price: "R$ 14,99", 
-      description: "Acesso VIP por 30 dias.", 
-      category: "Passes" ,
-      image: "/products/pass/product-vip.png"
-    },
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const response = await fetch('/api/products')
+        if (!response.ok) {
+          throw new Error('Erro ao carregar produtos')
+        }
+        const data = await response.json()
+        setProducts(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro desconhecido')
+        console.error('Erro ao buscar produtos:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-    // Pacotes
-    { id: 4, name: "G Coin 320", price: "R$ 1,99", 
-      description: "Pacote com 320 moedas.", 
-      category: "Pacotes", subcategory: "Pacote de Moeda", 
-      image: "/products/packs/product-coin-low.png" },
-    { id: 5, name: "G Coin 860", price: "R$ 5,38", 
-      description: "Pacote com 860 + 40 moedas.", 
-      category: "Pacotes", subcategory: "Pacote de Moeda", 
-      image: "/products/packs/product-coin-medium.png" },
-    { id: 6, name: "G Coin 2700", price: "R$ 29,99", discountPrice: "R$ 24,99", 
-      description: "Pacote com 2700 + 300 moedas.", 
-      category: "Pacotes", subcategory: "Pacote de Moeda", 
-      image: "/products/packs/product-coin-high.png" },
-    { id: 7, name: "Cash 💵 320", price: "R$ 7,99", 
-      description: "Pacote com 320 dinheiro.", 
-      category: "Pacotes", subcategory: "Pacote de Dinheiro", 
-      image: "/products/packs/product-money-low.png" },
-    { id: 8, name: "Cash 💵 860 + 40", price: "R$ 21,50", 
-      description: "Pacote com 860 + 40 dinheiro.", 
-      category: "Pacotes", subcategory: "Pacote de Dinheiro", 
-      image: "/products/packs/product-money-medium.png" },
-    { id: 9, name: "Cash 💵 2700 + 300", price: "R$ 67,50", 
-      description: "Pacote com 2700 + 300 dinheiro.", 
-      category: "Pacotes", subcategory: "Pacote de Dinheiro", 
-      image: "/products/packs/product-money-high.png" },
-
-    // Boosters
-    { id: 10, name: "Experience Booster", price: "R$ 18,99", 
-      description: "Multiplicador de experiência por 24 horas.", 
-      category: "Boosters" },
-
-    // Diversos
-    { id: 11, name: "Teleport Scroll", price: "R$ 12,99", 
-      description: "Pergaminho mágico para teletransporte instantâneo.", 
-      category: "Diversos" },
-    { id: 12, name: "Magic Potion Pack", price: "R$ 15,99", 
-      description: "Pacote com 10 poções mágicas variadas.", 
-      category: "Diversos" },
-
-    // Cosmeticos
-    /*
-    { id: 13, name: "Skin de Dragão", price: "R$ 39,99", 
-      description: "Skin exclusiva de dragão.", 
-      category: "Cosmeticos", subcategory: "Skins" },
-    { id: 14, name: "Asa Flamejante", price: "R$ 44,99", 
-      description: "Asa com efeito flamejante.", 
-      category: "Cosmeticos", subcategory: "Asas" },
-    { id: 15, name: "Mochila Gamer", price: "R$ 24,99", 
-      description: "Mochila temática gamer.", 
-      category: "Cosmeticos", subcategory: "Mochilas" },*/
-  ];
-
-  const products = productsRaw.map(p => ({ ...p, isDiscounted: !!p.discountPrice }));
+    fetchProducts()
+  }, [])
 
   // Extrai categorias únicas automaticamente
-  const categories = ["Todas", ...Array.from(new Set(products.map(p => p.category)))]
+  const categories = ["Todas", ...Array.from(new Set((products || []).map(p => p.category)))]
 
   // Extrai subcategorias da categoria selecionada
   const subcategories = selectedCategory === "Todas"
     ? []
-    : Array.from(new Set(products.filter(p => p.category === selectedCategory && p.subcategory).map(p => p.subcategory))).filter((sub): sub is string => typeof sub === 'string')
+    : Array.from(new Set((products || []).filter(p => p.category === selectedCategory && p.subcategory).map(p => p.subcategory))).filter((sub): sub is string => typeof sub === 'string')
 
   // Estado para subcategoria selecionada
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null)
 
   // Filtra produtos pela categoria e subcategoria selecionada
   const filteredProducts = selectedCategory === "Todas"
-    ? products
-    : products.filter(p => {
+    ? (products || [])
+    : (products || []).filter(p => {
         if (!selectedSubcategory) return p.category === selectedCategory
         return p.category === selectedCategory && p.subcategory === selectedSubcategory
       })
@@ -115,76 +79,134 @@ export default function Component() {
 
 
   return (
-    <div className="min-h-screen text-white" style={{background: '#151923' }}>
+    <div className="min-h-screen text-white flex flex-col" style={{background: '#151923' }}>
       <div className="w-full fixed top-0 left-0 z-50">
         <Header />
       </div>
-      <div className="relative w-full flex">
+      <div className="relative w-full flex flex-1">
         <div
-          className="absolute left-0 top-0 w-full -z-99"
+          className="absolute left-0 top-0 w-full z-0"
           style={{ height: 400}}
         >
           <Image
             src={Background}
             alt="Background Craft City"
             fill
-            style={{ objectFit: 'cover', objectPosition: 'center', opacity: .3 }}
+            style={{ objectFit: 'cover', 
+              objectPosition: 'center' , opacity: .5 }}
             priority
           />
         </div>
 
-        <Sidebar
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={(cat) => {
-            setSelectedCategory(cat)
-            setSelectedSubcategory(null)
-            setCurrentPage(1)
-          }}
-          subcategories={subcategories}
-          selectedSubcategory={selectedSubcategory}
-          onSubcategoryChange={(sub) => {
-            setSelectedSubcategory(sub)
-            setCurrentPage(1)
-          }}
-        />
+        {/* Sidebar - Desktop */}
+        <div className="hidden lg:block">
+          <Sidebar
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onCategoryChange={(cat) => {
+              setSelectedCategory(cat)
+              setSelectedSubcategory(null)
+              setCurrentPage(1)
+            }}
+            subcategories={subcategories}
+            selectedSubcategory={selectedSubcategory}
+            onSubcategoryChange={(sub) => {
+              setSelectedSubcategory(sub)
+              setCurrentPage(1)
+            }}
+          />
+        </div>
+
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)}>
+            <div className="absolute left-0 top-0 h-full w-80 bg-[#181c2b] pt-20" onClick={e => e.stopPropagation()}>
+              <Sidebar
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onCategoryChange={(cat) => {
+                  setSelectedCategory(cat)
+                  setSelectedSubcategory(null)
+                  setCurrentPage(1)
+                  setSidebarOpen(false)
+                }}
+                subcategories={subcategories}
+                selectedSubcategory={selectedSubcategory}
+                onSubcategoryChange={(sub) => {
+                  setSelectedSubcategory(sub)
+                  setCurrentPage(1)
+                  setSidebarOpen(false)
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Main */}
-        <main className="flex-1 flex flex-col items-center p-8 space-y-12">
-          <div className="w-full flex justify-center items-center" style={{ minHeight: 320 }}>
+        <main className="flex-1 flex flex-col items-center p-4 lg:p-8 space-y-8 lg:space-y-12">
+          {/* Mobile Category Filter Button */}
+          <div className="lg:hidden w-full flex justify-center mb-4">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="bg-[#9bf401] text-[#151923] px-6 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-[#7fa001] transition"
+            >
+              <Menu className="w-5 h-5" />
+              Filtrar por Categoria
+            </button>
+          </div>
+
+          <div className="w-full flex justify-center items-center" style={{ minHeight: 280 }}>
             <div className="text-center w-full">
               <Image
                 src={Logo}
                 alt="Craft City Logo"
-                width={300}
-                height={300}
-                className="mx-auto -z-999"
+                width={250}
+                height={250}
+                className="mx-auto w-[200px] sm:w-[250px] lg:w-[300px] h-auto object-contain relative z-10"
                 priority
-                style={{ opacity: 1 }}
               />
             </div>
           </div>
 
-          <div className="w-full max-w-6xl">
-            <h2 className="text-white font-bold text-3xl mb-8 text-center">Products</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {currentProducts.map((product) => (
-                <ProductCard key={product.id} {...product} />
-              ))}
-            </div>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+          <div className="w-full max-w-6xl px-4 lg:px-0">
+            <h2 className="text-white font-bold pt-5 text-2xl lg:text-3xl mb-6 lg:mb-8 text-center">Produtos</h2>
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="text-white text-lg">Carregando produtos...</div>
+              </div>
+            ) : error ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="text-red-400 text-lg">Erro: {error}</div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                  {currentProducts.map((product) => (
+                    <ProductCard key={product.id} {...product} />
+                  ))}
+                </div>
+                {filteredProducts.length > 0 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
+                {filteredProducts.length === 0 && !loading && (
+                  <div className="text-center text-gray-400 py-8">
+                    Nenhum produto encontrado nesta categoria.
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </main>
       </div>
 
       {/* Floating cart link */}
-      <a href="/cart" className="fixed bottom-8 right-8 z-50 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 hover:bg-green-600">
-        <ShoppingCart size={24} />
-        Carrinho
+      <a href="/cart" className="fixed bottom-4 right-4 lg:bottom-8 lg:right-8 z-50 bg-green-500 text-white px-4 py-2 lg:px-6 lg:py-3 rounded-full shadow-lg flex items-center gap-2 hover:bg-green-600 transition">
+        <ShoppingCart size={20} className="lg:w-6 lg:h-6" />
+        <span className="hidden sm:inline">Carrinho</span>
       </a>
 
       <Footer />

@@ -102,12 +102,12 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen text-white" style={{ background: '#151923' }}>
+    <div className="min-h-screen text-white flex flex-col" style={{ background: '#151923' }}>
       {/* Header fixo igual à home */}
       <div className="w-full fixed top-0 left-0 z-50">
         <Header />
       </div>
-        <main className="flex-1 flex flex-col items-center p-8 pt-[10rem] space-y-12">
+        <main className="flex-1 flex flex-col items-center p-4 lg:p-8 pt-20 lg:pt-24 space-y-8 lg:space-y-12">
           <div className="w-full w-2/6">
             <h1 className="text-2xl font-bold mb-4">Meu Perfil</h1>
 
@@ -142,6 +142,7 @@ export default function AccountPage() {
             </div>
           </div>
         </main>
+        <Footer />
       </div>
     );
 }

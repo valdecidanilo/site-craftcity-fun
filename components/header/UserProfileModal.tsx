@@ -62,26 +62,60 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form)
         });
+        
+        if (res.ok && method === 'POST') {
+          // Auto login após registro bem-sucedido via NextAuth
+          setMessage('Usuário criado! Fazendo login...');
+          const result = await signIn('credentials', {
+            email: form.email,
+            senha: form.senha,
+            redirect: false
+          });
+          
+          if (result?.ok) {
+            setMessage('Registro e login realizados com sucesso!');
+            if (onSave) onSave(form);
+            setTimeout(() => {
+              setMessage(null);
+              onClose();
+              router.refresh();
+            }, 1200);
+          } else {
+            setMessage('Usuário criado, mas erro no login automático. Tente fazer login manualmente.');
+          }
+        } else if (res.ok) {
+          setMessage('Perfil atualizado com sucesso!');
+          if (onSave) onSave(form);
+          setTimeout(() => {
+            setMessage(null);
+            onClose();
+          }, 1200);
+        } else {
+          const errorData = await res.json();
+          setMessage(errorData.error || 'Erro ao salvar perfil.');
+        }
       } else {
-        // login
-        res = await fetch('/api/user/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: form.email, senha: form.senha })
+        // login via NextAuth credentials
+        const result = await signIn('credentials', {
+          email: form.email,
+          senha: form.senha,
+          redirect: false
         });
-      }
-      if (res.ok) {
-        setMessage(tab === 'register' ? 'Perfil salvo com sucesso!' : 'Login realizado!');
-        if (onSave) onSave(form);
-        setTimeout(() => {
-          setMessage(null);
-          onClose();
-        }, 1200);
-      } else {
-        setMessage(tab === 'register' ? 'Erro ao salvar perfil.' : 'Login inválido.');
+        
+        if (result?.ok) {
+          setMessage('Login realizado!');
+          if (onSave) onSave(form);
+          setTimeout(() => {
+            setMessage(null);
+            onClose();
+            router.refresh();
+          }, 1200);
+        } else {
+          setMessage(result?.error || 'Login inválido.');
+        }
       }
     } catch (err) {
-      setMessage(tab === 'register' ? 'Erro ao salvar perfil.' : 'Login inválido.');
+      setMessage(tab === 'register' ? 'Erro ao salvar perfil.' : 'Erro de conexão.');
     }
     setLoading(false);
   }
@@ -96,8 +130,8 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: {
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-[#181c2b] rounded-xl p-8 min-w-[350px] text-white shadow-2xl">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-[#181c2b] rounded-xl p-6 lg:p-8 w-full max-w-md text-white shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex gap-4 mb-6 justify-center">
           <button
             type="button"
@@ -136,31 +170,16 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: {
                 <button
                 type="button"
                 className="bg-white text-[#151923] font-bold rounded px-6 py-2 flex items-center justify-center gap-2 border border-[#9bf401] hover:bg-[#9bf401] hover:text-[#151923] transition"
-                onClick={async () => {
+onClick={async () => {
                     try {
-                    setLoading(true);
-                    // salva a aba atual para restaurar depois do login
-                    localStorage.setItem('authTab', tab);
-
-                    // pede a URL do provedor sem redirecionar a página atual
-                    const res = await signIn('google', {
-                        redirect: false,
-                        callbackUrl: `${window.location.origin}/auth/popup-complete`,
-                    });
-
-                    const url = res?.url ?? '/api/auth/signin/google';
-                    const popup = window.open(url, 'GoogleLogin', 'width=500,height=600');
-
-                    // fallback: se o usuário fechar o popup sem completar
-                    const timer = setInterval(() => {
-                        if (popup && popup.closed) {
-                        clearInterval(timer);
-                        // força fluxo de pós-popup mesmo sem mensagem
-                        window.postMessage({ type: 'NEXTAUTH_POPUP_DONE' }, window.location.origin);
-                        }
-                    }, 500);
+                        setLoading(true);
+                        onClose(); // Close modal before redirect
+                        await signIn('google', {
+                            callbackUrl: window.location.href,
+                        });
                     } catch (e) {
-                    setLoading(false);
+                        setLoading(false);
+                        setMessage('Erro ao fazer login com Google');
                     }
                 }}
                 disabled={loading}
@@ -190,9 +209,9 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: {
           {tab === 'register' && message && (
             <div className={`mb-4 text-center font-semibold ${message.includes('sucesso') || message.includes('Login realizado') ? 'text-green-400' : 'text-red-400'}`}>{message}</div>
           )}
-          <div className="flex gap-4 mt-6 justify-center">
-            <button type="submit" className="bg-[#9bf401] text-[#151923] font-bold rounded px-6 py-2" disabled={loading}>{tab === 'login' ? 'Entrar' : 'Salvar'}</button>
-            <button type="button" className="bg-[#23263a] text-white rounded px-6 py-2" onClick={onClose} disabled={loading}>Cancelar</button>
+          <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center">
+            <button type="submit" className="bg-[#9bf401] text-[#151923] font-bold rounded px-6 py-2 w-full sm:w-auto" disabled={loading}>{tab === 'login' ? 'Entrar' : 'Salvar'}</button>
+            <button type="button" className="bg-[#23263a] text-white rounded px-6 py-2 w-full sm:w-auto" onClick={onClose} disabled={loading}>Cancelar</button>
           </div>
         </form>
       </div>
