@@ -16,19 +16,32 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (!user?.isAdmin) return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
 
     const body = await request.json()
-    const { name, price, discountPrice, description, category, subcategory, image } = body
+    const {
+      name,
+      price,
+      discountPrice,
+      description,
+      image,
+      categoryId,
+      subcategoryId,
+    } = body
 
-    if (!name || price === undefined || !description || !category) {
+    if (!name || price === undefined || !description || !categoryId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
     const priceNum = Number(price)
-    if (Number.isNaN(priceNum)) return NextResponse.json({ error: 'Preço inválido' }, { status: 400 })
+    if (Number.isNaN(priceNum))
+      return NextResponse.json({ error: 'Preço inválido' }, { status: 400 })
 
     let discountNum: number | null = null
     if (discountPrice !== undefined && discountPrice !== null && discountPrice !== '') {
       discountNum = Number(discountPrice)
-      if (Number.isNaN(discountNum)) return NextResponse.json({ error: 'Preço com desconto inválido' }, { status: 400 })
+      if (Number.isNaN(discountNum))
+        return NextResponse.json(
+          { error: 'Preço com desconto inválido' },
+          { status: 400 }
+        )
     }
 
     const product = await prisma.product.update({
@@ -38,8 +51,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         price: priceNum,
         discountPrice: discountNum,
         description,
-        category,
-        subcategory: subcategory || null,
+        categoryId,
+        subcategoryId: subcategoryId || null,
         image: image || null,
       },
     })
@@ -47,7 +60,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({
       ...product,
       price: Number(product.price),
-      discountPrice: product.discountPrice != null ? Number(product.discountPrice) : null,
+      discountPrice:
+        product.discountPrice != null ? Number(product.discountPrice) : null,
       isDiscounted: product.discountPrice != null,
     })
   } catch (error) {
