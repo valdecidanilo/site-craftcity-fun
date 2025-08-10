@@ -22,7 +22,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
 EXPOSE 3000
 CMD ["npm", "start"]
