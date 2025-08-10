@@ -3,80 +3,117 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/services/auth';
+
+type CartItemInput = {
+  id?: string | number;
+  name: string;
+  price: number | string;
+  quantity?: number | string;
+  image?: string;
+  category?: string;
+};
+type BuyerInput = { email?: string; name?: string; };
+type RequestBody = { items: CartItemInput[]; paymentMethod?: 'pix'|'card'|'checkout_pro'; buyer?: BuyerInput; };
 
 function parseBRL(v: string | number): number {
   if (typeof v === 'number') return v;
-  // "R$ 59,99" -> 59.99
-  return Number(
-    v.replace(/[^\d,.-]/g, '')  // remove R$ e espaços
-     .replace(/\./g, '')        // separador de milhar
-     .replace(',', '.')         // decimal
-  );
+  const only = v.replace(/[^\d,.-]/g, '').replace(/\.(?=\d{3}(?:\D|$))/g, '');
+  const normalized = only.replace(',', '.');
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : 0;
 }
+function normalizeCategory(c?: string): string | undefined {
+  if (!c) return undefined;
+  const s = c.toLowerCase();
+  if (s.includes('cosm')) return 'cosmetics';
+  if (s.includes('eletr') || s.includes('electr')) return 'electronics';
+  if (s.includes('serv')) return 'services';
+  return 'others';
+}
+const isHttps = (url?: string) => !!url && /^https:\/\//i.test(url);
 
 export async function POST(req: NextRequest) {
   try {
-    const { items, paymentMethod } = await req.json();
+    const body = (await req.json()) as RequestBody;
+    const { items, paymentMethod, buyer } = body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Carrinho vazio' }, { status: 400 });
     }
 
-    // Determina se deve usar modo de teste baseado na variável de ambiente
-    const useTestMode = process.env.MERCADOPAGO_TEST_MODE === 'true' || process.env.NODE_ENV === 'development';
+    const session = await getServerSession(authOptions);
+    const useTestMode = process.env.NODE_ENV === 'development';
+
     const MP_ACCESS_TOKEN = useTestMode
-      ? (process.env.MERCADOPAGO_ACCESS_TOKEN_TEST)
-      : (process.env.MERCADOPAGO_ACCESS_TOKEN);
-    
+      ? process.env.MERCADOPAGO_ACCESS_TOKEN_TEST
+      : process.env.MERCADOPAGO_ACCESS_TOKEN;
+
     if (!MP_ACCESS_TOKEN) {
-      return NextResponse.json({ 
-        error: `Token MercadoPago ausente para modo ${useTestMode ? 'teste' : 'produção'}` 
-      }, { status: 500 });
+      return NextResponse.json(
+        { error: `Token do Mercado Pago ausente para modo ${useTestMode ? 'teste' : 'produção'}` },
+        { status: 500 }
+      );
     }
 
-    // monta itens no formato do Checkout Pro
-    const mpItems = items.map((it: any) => ({
-      title: it.name,
-      quantity: Number(it.quantity || 1),
-      currency_id: 'BRL',
-      unit_price: parseBRL(it.price),
-      picture_url: it.image || undefined,
-      category_id: it.category || undefined,
-    }));
+    const mpItems = items.map((it) => {
+      const quantity = Number(it.quantity ?? 1);
+      const unit_price = parseBRL(it.price);
+      return {
+        title: String(it.name ?? 'Item'),
+        quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+        currency_id: 'BRL',
+        unit_price: unit_price >= 0 ? unit_price : 0,
+        picture_url: it.image || undefined,
+        category_id: normalizeCategory(it.category),
+      };
+    });
 
-    // total
-    const transactionAmount = mpItems.reduce((s: number, i: any) => s + i.unit_price * i.quantity, 0);
-    
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    console.log('Base URL para callbacks:', baseUrl);
+    const transactionAmount = mpItems.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
 
-    // preferência (Checkout Pro)
-    const body = {
+    const baseUrl = useTestMode ? process.env.NEXTAUTH_LOCAL_URL : process.env.NEXTAUTH_URL;
+    if (!baseUrl) {
+      return NextResponse.json(
+        { error: 'BASE URL não configurada. Defina PUBLIC_URL/NEXTAUTH_URL/NEXTAUTH_LOCAL_URL.' },
+        { status: 500 }
+      );
+    }
+
+    const payer = {
+      email: buyer?.email ?? (session?.user?.email as string | undefined),
+      name:  buyer?.name  ?? (session?.user?.name  as string | undefined),
+    };
+    if (!payer.email) {
+      return NextResponse.json({ error: 'Email do comprador é obrigatório (payer.email).' }, { status: 400 });
+    }
+
+    const preferencePayload: any = {
       items: mpItems,
-      payer: {
-        // preencha se tiver
-        email: items[0]?.buyerEmail || undefined,
-        name: items[0]?.buyerName || undefined,
-      },
+      payer,
       back_urls: {
         success: `${baseUrl}/checkout/success`,
         failure: `${baseUrl}/checkout/failure`,
         pending: `${baseUrl}/checkout/pending`,
       },
-      // auto_return: 'approved', // removido temporariamente para testar
       notification_url: `${baseUrl}/api/webhook/mercadopago`,
       statement_descriptor: 'CRAFTCITY',
-      // Se quiser priorizar PIX/cartão no Checkout Pro:
-      // payment_methods: {
-      //   default_payment_method_id: paymentMethod === 'pix' ? 'pix' : undefined,
-      // },
       metadata: {
-        cart_total: transactionAmount,
+        cart_total: Number(transactionAmount.toFixed(2)),
         project: 'craftcity',
+        paymentMethod: paymentMethod ?? 'checkout_pro',
+        env: useTestMode ? 'test' : 'prod',
       },
     };
 
-    console.log('Payload enviado ao MercadoPago:', JSON.stringify(body, null, 2));
+    // Só liga auto_return se a success URL for HTTPS (evita 400 em localhost)
+    if (isHttps(preferencePayload.back_urls.success)) {
+      preferencePayload.auto_return = 'approved';
+    }
+
+    console.log('[MP] Criando preferência:', JSON.stringify(
+      { ...preferencePayload, payer: { ...preferencePayload.payer, email: '***' } }, null, 2
+    ));
 
     const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
@@ -85,39 +122,32 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
         'X-Idempotency-Key': crypto.randomUUID(),
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(preferencePayload),
     });
 
     const data = await res.json().catch(() => null);
 
     if (!res.ok) {
-      console.error('Erro MercadoPago:', {
+      console.error('Mercado Pago ERROR:', {
         status: res.status,
         statusText: res.statusText,
-        data: data,
-        token_usado: MP_ACCESS_TOKEN?.substring(0, 20) + '...',
-        modo_teste: useTestMode
+        data,
+        modo_teste: useTestMode,
       });
-      
       return NextResponse.json(
-        { 
-          error: 'MercadoPago error', 
-          status: res.status,
-          detail: data,
-          message: data?.message || data?.error || 'Erro desconhecido'
-        },
+        { error: 'MercadoPago error', status: res.status, detail: data, message: data?.message || data?.error || 'Erro desconhecido' },
         { status: 502 }
       );
     }
 
-    // retorna as URLs de redirecionamento
     return NextResponse.json({
-      init_point: data.init_point,               // produção
-      sandbox_init_point: data.sandbox_init_point, // sandbox
       id: data.id,
-      test_mode: useTestMode, // indica qual modo está sendo usado
+      init_point: data.init_point,
+      sandbox_init_point: data.sandbox_init_point,
+      test_mode: useTestMode,
     });
   } catch (e: any) {
+    console.error('[MP] EXCEPTION:', e);
     return NextResponse.json({ error: 'Erro interno', detail: String(e?.message || e) }, { status: 500 });
   }
 }

@@ -84,6 +84,9 @@ export default function AdminDashboard() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [catSaving, setCatSaving] = useState(false);
 
+  // Toggle do painel de categorias no mobile
+  const [catOpen, setCatOpen] = useState(false);
+
   const BRL = useMemo(
     () => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }),
     []
@@ -112,7 +115,7 @@ export default function AdminDashboard() {
       }
       setIsAdmin(true);
       await Promise.all([loadCategories(), loadProducts()]);
-    } catch (err) {
+    } catch {
       router.push('/');
     } finally {
       setAdminLoading(false);
@@ -333,90 +336,119 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Painel de Categorias */}
-        <section className="bg-[#181c2b] border border-white/10 rounded-xl p-6 mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Tags className="w-5 h-5 text-[#9bf401]" />
-            <h2 className="text-xl font-semibold text-white">Categorias & Subcategorias</h2>
+        {/* Painel de Categorias (responsivo) */}
+        <section className="bg-[#181c2b] border border-white/10 rounded-xl p-4 sm:p-6 mb-8">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <Tags className="w-5 h-5 text-[#9bf401]" />
+              <h2 className="text-lg sm:text-xl font-semibold text-white">Categorias & Subcategorias</h2>
+            </div>
+
+            {/* Toggle só no mobile */}
+            <button
+              onClick={() => setCatOpen(v => !v)}
+              className="sm:hidden px-3 py-2 text-sm rounded bg-[#23263a] text-white border border-white/10"
+              aria-expanded={catOpen}
+              aria-controls="cats-panel"
+              type="button"
+            >
+              {catOpen ? 'Fechar' : 'Abrir'}
+            </button>
           </div>
 
-          {categories.length === 0 && (
-            <div className="text-white/70 mb-4">Nenhuma categoria cadastrada.</div>
-          )}
+          <div
+            id="cats-panel"
+            className={`transition-all duration-200 overflow-hidden sm:overflow-visible
+                        ${catOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 sm:max-h-none sm:opacity-100'}`}
+          >
+            {categories.length === 0 && (
+              <div className="text-white/70 mb-4">Nenhuma categoria cadastrada.</div>
+            )}
 
-          {categories.length > 0 && (
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              {categories.map((cat) => (
-                <div key={cat.id} className="rounded-lg bg-[#1b2132] border border-white/10 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="text-white font-semibold">
-                      {cat.name} <span className="text-white/50">({cat._count?.products ?? 0})</span>
+            {categories.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mb-6">
+                {categories.map((cat) => (
+                  <div
+                    key={cat.id}
+                    className="rounded-lg bg-[#1b2132] border border-white/10 p-4"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-white font-semibold truncate">
+                        {cat.name}{' '}
+                        <span className="text-white/50">({cat._count?.products ?? 0})</span>
+                      </div>
+                      {!cat.isActive && (
+                        <span className="text-[10px] px-2 py-1 rounded bg-red-500/20 text-red-300 shrink-0">
+                          inativa
+                        </span>
+                      )}
                     </div>
-                    {!cat.isActive && <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-300">inativa</span>}
+
+                    {cat.subcategories?.length ? (
+                      <ul className="mt-3 space-y-1 max-h-40 overflow-auto pr-1 sm:max-h-none sm:overflow-visible">
+                        {cat.subcategories.map((sub) => (
+                          <li key={sub.id} className="text-white/80 text-sm flex justify-between gap-2">
+                            <span className="truncate">{sub.name}</span>
+                            <span className="text-white/50 shrink-0">({sub._count?.products ?? 0})</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-white/60 text-sm mt-2">Sem subcategorias</div>
+                    )}
                   </div>
-                  {cat.subcategories?.length ? (
-                    <ul className="mt-3 space-y-1">
-                      {cat.subcategories.map((sub) => (
-                        <li key={sub.id} className="text-white/80 text-sm flex justify-between">
-                          <span>{sub.name}</span>
-                          <span className="text-white/50">({sub._count?.products ?? 0})</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-white/60 text-sm mt-2">Sem subcategorias</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <form onSubmit={addCategory} className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Nova categoria"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                className="flex-1 bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
-              />
-              <Button
-                type="submit"
-                disabled={catSaving}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-              >
-                Adicionar
-              </Button>
-            </form>
-
-            <form onSubmit={addSubcategory} className="flex gap-2">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
-              >
-                <option value="">Categoria</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
                 ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Nova subcategoria"
-                value={newSubcategory}
-                onChange={(e) => setNewSubcategory(e.target.value)}
-                className="flex-1 bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
-              />
-              <Button
-                type="submit"
-                disabled={catSaving || !selectedCategory}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-              >
-                Adicionar
-              </Button>
-            </form>
+              </div>
+            )}
+
+            {/* Formulários de adicionar: empilham no mobile */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6">
+              <form onSubmit={addCategory} className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  placeholder="Nova categoria"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  className="flex-1 bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
+                />
+                <Button
+                  type="submit"
+                  disabled={catSaving}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                >
+                  Adicionar
+                </Button>
+              </form>
+
+              <form onSubmit={addSubcategory} className="flex flex-col sm:flex-row gap-2">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
+                >
+                  <option value="">Categoria</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Nova subcategoria"
+                  value={newSubcategory}
+                  onChange={(e) => setNewSubcategory(e.target.value)}
+                  className="flex-1 bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
+                />
+                <Button
+                  type="submit"
+                  disabled={catSaving || !selectedCategory}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                >
+                  Adicionar
+                </Button>
+              </form>
+            </div>
           </div>
         </section>
 
@@ -428,10 +460,14 @@ export default function AdminDashboard() {
             </h2>
 
             {error && (
-              <div className="mb-4 bg-red-500/20 border border-red-500 text-red-300 rounded px-4 py-2">{error}</div>
+              <div className="mb-4 bg-red-500/20 border border-red-500 text-red-300 rounded px-4 py-2">
+                {error}
+              </div>
             )}
             {message && (
-              <div className="mb-4 bg-green-500/20 border border-green-500 text-green-300 rounded px-4 py-2">{message}</div>
+              <div className="mb-4 bg-green-500/20 border border-green-500 text-green-300 rounded px-4 py-2">
+                {message}
+              </div>
             )}
 
             <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">

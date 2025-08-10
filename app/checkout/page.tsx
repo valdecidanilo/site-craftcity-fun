@@ -2,11 +2,13 @@
 import { useCart } from '@/components/cart/CartContext';
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/header/header';
+import { useSession } from 'next-auth/react';
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState('pix');
   const [isClient, setIsClient] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
     setIsClient(true);
@@ -20,7 +22,11 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: cart,
-          paymentMethod, // opcional (pode usar pra default no server)
+          paymentMethod,
+          buyer: {
+            email: session?.user?.email,
+            name: session?.user?.name,
+          },
         }),
       });
       const data = await response.json();

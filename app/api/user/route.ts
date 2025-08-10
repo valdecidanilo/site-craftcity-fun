@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/services/auth";
+import bcrypt from 'bcryptjs';
 
 const noStore = { "Cache-Control": "no-store" };
+const SALT_ROUNDS = 10;
 
 export async function GET(_req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions); // ✅ v4
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401, headers: noStore });
     }
@@ -30,11 +32,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { email, senha, nome, nickname, idade } = body;
     
-    if (!email || !senha) {
+    if (!email || !senha || senha.length < 6) {
       return NextResponse.json({ error: "Email e senha são obrigatórios" }, { status: 400, headers: noStore });
     }
 
-    // Verifica se usuário já existe
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
@@ -43,10 +44,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email já cadastrado" }, { status: 409, headers: noStore });
     }
 
+    const senhaHash = await bcrypt.hash(senha, SALT_ROUNDS);
+
     const created = await prisma.user.create({
       data: {
         email,
-        senha,
+        senha: senhaHash,
         name: nome,
         nickname,
         idade: idade ? Number(idade) : null,
@@ -64,7 +67,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions); // ✅ v4
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401, headers: noStore });
     }
@@ -74,6 +77,13 @@ export async function PUT(req: NextRequest) {
     if (body.name !== undefined) data.name = body.name;
     if (body.nickname !== undefined) data.nickname = body.nickname;
     if (body.idade !== undefined) data.idade = body.idade === null ? null : Number(body.idade);
+    
+    if (typeof body.senha === 'string' && body.senha.trim()) {
+      if (body.senha.length < 6) {
+        return NextResponse.json({ error: 'A nova senha precisa ter pelo menos 6 caracteres.' }, { status: 400, headers: noStore });
+      }
+      data.senha = await bcrypt.hash(body.senha, SALT_ROUNDS);
+    }
 
     const updated = await prisma.user.update({
       where: { email: session.user.email },

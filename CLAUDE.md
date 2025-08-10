@@ -67,4 +67,5 @@ This is a Next.js 15.2.4 e-commerce application called "Craft City" built with T
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google OAuth
 - `MICROSOFT_CLIENT_ID` / `MICROSOFT_CLIENT_SECRET` - Microsoft OAuth  
 - `NEXTAUTH_URL` - NextAuth configuration
+- `NEXTAUTH_LOCAL_URL` - NextAuth local configuration
 - `NEXTAUTH_SECRET` - NextAuth JWT secret
