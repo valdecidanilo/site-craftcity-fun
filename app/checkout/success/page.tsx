@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCart } from '@/components/cart/CartContext';
 
-export default function SuccessClient() {
+// Componente que usa useSearchParams
+function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { clearCart } = useCart();
@@ -83,5 +84,29 @@ export default function SuccessClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component
+function LoadingSuccess() {
+  return (
+    <div className="min-h-screen bg-[#151923] text-white flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-[#181c2b] rounded-xl p-8 text-center">
+        <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+          <div className="w-8 h-8 bg-gray-500 rounded-full"></div>
+        </div>
+        <h1 className="text-xl font-bold text-gray-400 mb-4">Carregando...</h1>
+        <p className="text-gray-500">Verificando status do pagamento...</p>
+      </div>
+    </div>
+  );
+}
+
+// Componente principal com Suspense
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<LoadingSuccess />}>
+      <SuccessContent />
+    </Suspense>
   );
 }
