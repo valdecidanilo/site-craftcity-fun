@@ -10,7 +10,9 @@ export async function GET() {
         subcategories: {
           where: { isActive: true },
           orderBy: { order: "asc" },
-          _count: { select: { products: true } }
+          include: {
+            _count: { select: { products: true } }
+          }
         },
         _count: { select: { products: true } }
       }
