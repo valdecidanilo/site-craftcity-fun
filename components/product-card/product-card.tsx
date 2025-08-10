@@ -66,7 +66,7 @@ export function ProductCard(props: ProductCardProps) {
             onClick={() => {
               addToCart({
                 ...props,
-                price: Number(props.discountPrice ?? props.price?.replace(/[^\d.,]/g, '').replace(',', '.') ?? 0)
+                price: Number((props.discountPrice ?? props.price)?.toString().replace(/[^\d.,]/g, '').replace(',', '.') ?? 0)
               });
               // Para redirecionar automaticamente, descomente a linha abaixo:
               router.push('/cart');
