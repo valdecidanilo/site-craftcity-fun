@@ -14,8 +14,8 @@ import { Sidebar } from '@/components/sidebar/sidebar'
 type Product = {
   id: string
   name: string
-  price: string
-  discountPrice?: string | null
+  price: number
+  discountPrice?: number | null
   description: string
   category: string
   subcategory?: string | null
@@ -41,7 +41,18 @@ export default function Component() {
         const response = await fetch('/api/products')
         if (!response.ok) throw new Error('Erro ao carregar produtos')
         const data = await response.json()
-        setProducts(data)
+        const normalized: Product[] = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price: Number(p.price),
+          discountPrice: p.discountPrice != null ? Number(p.discountPrice) : null,
+          description: p.description,
+          category: p.category?.name || '',
+          subcategory: p.subcategory?.name || null,
+          image: p.image,
+          isDiscounted: p.discountPrice != null,
+        }))
+        setProducts(normalized)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro desconhecido')
         console.error('Erro ao buscar produtos:', err)
