@@ -1,28 +1,27 @@
-'use client'
-import { useEffect } from 'react';
+'use client';
+
+import { useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCart } from '@/components/cart/CartContext';
 
-export default function CheckoutSuccess() {
+export default function SuccessClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { clearCart } = useCart();
 
-  useEffect(() => {
-    const paymentId = searchParams.get('payment_id');
-    const status = searchParams.get('status');
-    
-    console.log('Checkout Success - Payment ID:', paymentId, 'Status:', status);
-    
-    // Se pagamento aprovado, limpar carrinho
-    if (status === 'approved') {
-      clearCart();
-    }
-  }, [searchParams, clearCart]);
-
   const paymentId = searchParams.get('payment_id');
   const status = searchParams.get('status');
   const merchantOrderId = searchParams.get('merchant_order_id');
+
+  // evita limpar o carrinho duas vezes em dev (StrictMode) ou re-render
+  const clearedRef = useRef(false);
+  useEffect(() => {
+    console.log('Checkout Success - Payment ID:', paymentId, 'Status:', status);
+    if (status === 'approved' && !clearedRef.current) {
+      clearCart();
+      clearedRef.current = true;
+    }
+  }, [status, paymentId, clearCart]);
 
   return (
     <div className="min-h-screen bg-[#151923] text-white flex items-center justify-center px-4">
@@ -34,12 +33,8 @@ export default function CheckoutSuccess() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-green-500 mb-4">
-              Pagamento Aprovado! 🎉
-            </h1>
-            <p className="text-gray-300 mb-6">
-              Sua compra foi processada com sucesso!
-            </p>
+            <h1 className="text-2xl font-bold text-green-500 mb-4">Pagamento Aprovado! 🎉</h1>
+            <p className="text-gray-300 mb-6">Sua compra foi processada com sucesso!</p>
           </>
         ) : status === 'pending' ? (
           <>
@@ -48,12 +43,8 @@ export default function CheckoutSuccess() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-yellow-500 mb-4">
-              Pagamento Pendente ⏳
-            </h1>
-            <p className="text-gray-300 mb-6">
-              Aguardando confirmação do pagamento...
-            </p>
+            <h1 className="text-2xl font-bold text-yellow-500 mb-4">Pagamento Pendente ⏳</h1>
+            <p className="text-gray-300 mb-6">Aguardando confirmação do pagamento...</p>
           </>
         ) : (
           <>
@@ -62,21 +53,17 @@ export default function CheckoutSuccess() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-red-500 mb-4">
-              Ops! Algo deu errado 😕
-            </h1>
-            <p className="text-gray-300 mb-6">
-              Não foi possível processar seu pagamento.
-            </p>
+            <h1 className="text-2xl font-bold text-red-500 mb-4">Ops! Algo deu errado 😕</h1>
+            <p className="text-gray-300 mb-6">Não foi possível processar seu pagamento.</p>
           </>
         )}
-        
+
         {paymentId && (
           <p className="text-sm text-gray-400 mb-6">
-            ID: {paymentId}
+            ID: {paymentId} {merchantOrderId ? `• Order: ${merchantOrderId}` : ''}
           </p>
         )}
-        
+
         <div className="space-y-3">
           <button
             onClick={() => router.push('/')}
@@ -84,7 +71,7 @@ export default function CheckoutSuccess() {
           >
             Voltar à Loja
           </button>
-          
+
           {status !== 'approved' && (
             <button
               onClick={() => router.push('/checkout')}
