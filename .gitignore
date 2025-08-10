@@ -53,3 +53,7 @@ turbo/
 **/._*
 
 /lib/generated/prisma
+
+# Prisma SQLite DB
+prisma/*.db
+prisma/*.db-journal
