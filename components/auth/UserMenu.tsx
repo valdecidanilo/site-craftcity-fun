@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { useSession, signIn, signOut } from 'next-auth/react'; // <-- signIn aqui
+import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export function UserMenu({ onClick }: { onClick?: () => void }) {
@@ -19,12 +19,24 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
   const displayName = isLogged ? (session?.user?.name || 'Minha conta') : 'Entrar';
   const displayEmail = isLogged ? (session?.user?.email || '') : '';
 
-  // <-- Fallback pra abrir login se onClick não veio
   const handleOpenLogin = () => {
-    if (onClick) return onClick(); // abre seu popup/modal custom
-    // fallback: abre a tela padrão do NextAuth
-    return signIn(undefined, { callbackUrl: '/account' }); 
-    // se preferir sua rota: router.push('/auth/signin')
+    console.log('🚀 handleOpenLogin chamado');
+    console.log('onClick existe?', !!onClick);
+    
+    if (onClick) {
+      console.log('📞 Chamando onClick personalizado');
+      try {
+        onClick();
+        console.log('✅ onClick executado com sucesso');
+      } catch (error) {
+        console.error('❌ Erro ao executar onClick:', error);
+      }
+      return;
+    }
+    
+    // Fallback para NextAuth padrão
+    console.log('🔄 Usando fallback NextAuth');
+    signIn(undefined, { callbackUrl: '/account' });
   };
 
   useEffect(() => {
@@ -39,9 +51,13 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
   if (!isLogged) {
     return (
       <button
-        onClick={(e) => { e.preventDefault(); handleOpenLogin(); }}
+        onClick={(e) => { 
+          e.preventDefault(); 
+          console.log('🖱️ Botão de login clicado');
+          handleOpenLogin(); 
+        }}
         aria-label="Área do usuário"
-        className="ml-2 flex items-center gap-2 p-0 bg-transparent border-none cursor-pointer"
+        className="ml-2 flex items-center gap-2 p-0 bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity"
       >
         <span className="text-white text-sm hidden sm:inline">Entrar</span>
         <Image
@@ -49,7 +65,7 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
           alt="Usuário não autenticado"
           width={40}
           height={40}
-          className="rounded-full w-10 h-10 object-cover"
+          className="rounded-full w-10 h-10 object-cover border-2 border-transparent hover:border-[#9bf401] transition-colors"
         />
       </button>
     );

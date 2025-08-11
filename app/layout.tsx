@@ -1,6 +1,6 @@
 // app/layout.tsx
 import './globals.css';
-import { UserProfileModalGlobal } from './utils/UserProfileModalGlobal';
+import { UserProfileModalGlobal } from '@/components/auth/UserProfileModalGlobal';
 import SessionProviderWrapper from './utils/SessionProviderWrapper';
 import { CartProvider } from '@/components/cart/CartContext';
 import SessionAutoSignOut from '@/app/utils/SessionAutoSignOut';

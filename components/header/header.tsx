@@ -1,3 +1,5 @@
+'use client';
+
 import { Home, ShoppingCart, Store, Settings, Menu, X } from "lucide-react"
 import { Button } from "@/components/button/button"
 import * as styles from "@/components/header/styles"
@@ -25,8 +27,38 @@ export function Header() {
   }, [session]);
   
   function openUserProfileModal() {
-    window.dispatchEvent(new CustomEvent('open-user-profile-modal'));
+    console.log('🎯 openUserProfileModal chamado');
+    
+    try {
+      // Verificar se window existe (SSR safety)
+      if (typeof window === 'undefined') {
+        console.warn('⚠️ Window não está disponível (SSR)');
+        return;
+      }
+
+      // Criar e disparar o evento
+      const event = new CustomEvent('open-user-profile-modal');
+      console.log('📡 Disparando evento:', event.type);
+      
+      window.dispatchEvent(event);
+      console.log('✅ Evento disparado com sucesso');
+      
+      // Verificar se há listeners
+      setTimeout(() => {
+        const hasListeners = window.document.body.parentElement?.getAttribute('data-modal-listeners') === 'true';
+        console.log('👂 Listeners registrados?', hasListeners);
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Erro ao disparar evento:', error);
+    }
   }
+
+  // Debug: verificar se a função está sendo passada corretamente
+  useEffect(() => {
+    console.log('🔍 Header renderizado, openUserProfileModal:', typeof openUserProfileModal);
+  }, []);
+  
   return (
     <header className={styles.headerWrapper}>
       <div className={styles.headerContainer}>
@@ -47,14 +79,13 @@ export function Header() {
                 </span>
               )}
             </a>
-            {/*<Button className={styles.headerButton + " justify-center"}>
-                <Store className="w-5 h-5" /> Loja
-              </Button>*/}
+            
             {isAdmin && (
               <a href="/admin/dashboard" className="flex items-center gap-2 text-white font-semibold text-lg hover:text-[#9bf401] transition">
                 <Settings className="w-6 h-6" /> Dashboard
               </a>
             )}
+            
             <UserMenu onClick={openUserProfileModal} />
           </div>
 
@@ -83,9 +114,6 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden absolute top-full left-0 w-full bg-[#181c2b] border-t border-[#23263a] z-50">
             <div className="flex flex-col p-4 space-y-4">
-              {/*<Button className={styles.headerButton + " justify-center"}>
-                <Store className="w-5 h-5" /> Loja
-              </Button>*/}
               {isAdmin && (
                 <a
                   href="/admin/dashboard"
