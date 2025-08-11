@@ -4,7 +4,7 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/services/auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 type CartItemInput = {
   id?: string | number;

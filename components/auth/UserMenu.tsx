@@ -2,20 +2,31 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession, signIn, signOut } from 'next-auth/react'; // <-- signIn aqui
 import { useRouter } from 'next/navigation';
 
 export function UserMenu({ onClick }: { onClick?: () => void }) {
-  const { data: session, update } = useSession();
+  const { data: session, status, update } = useSession();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const userImage = session?.user?.image || '/placeholder-user.png';
-  const userName = (session?.user?.name as string) || 'Jogador';
-  const userEmail = session?.user?.email || '';
+  const isLogged = status === 'authenticated' && !!session?.user;
+  const imgSrc = isLogged
+    ? (session?.user?.image && session.user.image.trim() !== '' ? session.user.image : '/placeholder-user.png')
+    : '/placeholder-not-user.png';
 
-  // fecha ao clicar fora
+  const displayName = isLogged ? (session?.user?.name || 'Minha conta') : 'Entrar';
+  const displayEmail = isLogged ? (session?.user?.email || '') : '';
+
+  // <-- Fallback pra abrir login se onClick não veio
+  const handleOpenLogin = () => {
+    if (onClick) return onClick(); // abre seu popup/modal custom
+    // fallback: abre a tela padrão do NextAuth
+    return signIn(undefined, { callbackUrl: '/account' }); 
+    // se preferir sua rota: router.push('/auth/signin')
+  };
+
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!menuRef.current) return;
@@ -25,19 +36,17 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
 
-
-  if (!session) {
-    // não logado → abre modal de login/registro como já fazia
+  if (!isLogged) {
     return (
       <button
-        onClick={onClick}
+        onClick={(e) => { e.preventDefault(); handleOpenLogin(); }}
         aria-label="Área do usuário"
         className="ml-2 flex items-center gap-2 p-0 bg-transparent border-none cursor-pointer"
       >
         <span className="text-white text-sm hidden sm:inline">Entrar</span>
         <Image
-          src={userImage}
-          alt="Usuário"
+          src={imgSrc}
+          alt="Usuário não autenticado"
           width={40}
           height={40}
           className="rounded-full w-10 h-10 object-cover"
@@ -46,7 +55,6 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
     );
   }
 
-  // logado → mostra dropdown
   return (
     <div className="relative ml-2" ref={menuRef}>
       <button
@@ -55,11 +63,11 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
         className="flex items-center gap-2 p-0 bg-transparent border-none cursor-pointer"
       >
         <span className="text-white text-sm hidden sm:inline font-medium">
-          {userName}
+          {displayName}
         </span>
         <Image
-          src={userImage}
-          alt={userName}
+          src={imgSrc}
+          alt={displayName}
           width={40}
           height={40}
           className="rounded-full w-10 h-10 object-cover ring-1 ring-white/20"
@@ -69,10 +77,10 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
       {open && (
         <div className="absolute right-0 mt-2 w-64 rounded-xl bg-[#1b2132] text-white shadow-2xl border border-white/10 p-3 z-50">
           <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5">
-            <Image src={userImage} alt={userName} width={36} height={36} className="rounded-full" />
+            <Image src={imgSrc} alt={displayName} width={36} height={36} className="rounded-full" />
             <div className="min-w-0">
-              <div className="font-semibold truncate">{userName}</div>
-              <div className="text-xs text-white/60 truncate">{userEmail}</div>
+              <div className="font-semibold truncate">{displayName}</div>
+              <div className="text-xs text-white/60 truncate">{displayEmail}</div>
             </div>
           </div>
 
@@ -83,7 +91,6 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
             Meu perfil
           </button>
 
-          {/* Ação rápida: mudar nickname inline */}
           <QuickNick />
 
           <div className="h-px bg-white/10 my-2" />
@@ -128,10 +135,7 @@ function QuickNick() {
                 body: JSON.stringify({ nickname: nick.trim() }),
               });
               setOk(res.ok);
-              if (res.ok) {
-                // Force session update to reflect changes
-                await update();
-              }
+              if (res.ok) await update();
             } finally {
               setSaving(false);
             }

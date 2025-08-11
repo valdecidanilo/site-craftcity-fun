@@ -3,7 +3,7 @@ import { SessionProvider } from 'next-auth/react';
 
 export default function SessionProviderWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider refetchInterval={0} refetchOnWindowFocus={true}>
+    <SessionProvider refetchInterval={60} refetchOnWindowFocus={true}>
       {children}
     </SessionProvider>
   );

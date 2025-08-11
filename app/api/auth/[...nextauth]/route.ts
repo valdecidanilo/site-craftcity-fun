@@ -1,163 +1,128 @@
 // app/api/auth/[...nextauth]/route.ts
-import NextAuth, { type NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
+export const runtime = 'nodejs';
+
+import NextAuth from 'next-auth';
+import type { NextAuthOptions } from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: { strategy: 'jwt' },
+
   pages: {
-    signIn: '/auth/signin', // opcional: página customizada de login
-    error: '/auth/error',   // opcional: página customizada de erro
+    signIn: '/auth/signin',
+    error: '/auth/error',
   },
+
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       allowDangerousEmailAccountLinking: true,
       authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        }
-      }
+        params: { prompt: 'consent', access_type: 'offline', response_type: 'code' },
+      },
     }),
     CredentialsProvider({
-      name: "credentials",
+      name: 'credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        senha: { label: "Senha", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        senha: { label: 'Senha', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.senha) {
-          return null;
-        }
-
-        try {
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-            select: { 
-              id: true, 
-              name: true, 
-              email: true, 
-              nickname: true, 
-              idade: true, 
-              image: true, 
-              senha: true, 
-              isAdmin: true 
-            }
-          });
-
-          if (!user || !user.senha) return null;
-
-          const ok = await bcrypt.compare(credentials.senha, user.senha);
-          if (!ok) return null;
-
-          const { senha, ...userWithoutPassword } = user;
-          return userWithoutPassword;
-        } catch (error) {
-          console.error("Erro na autorização:", error);
-          return null;
-        }
-      }
+        if (!credentials?.email || !credentials?.senha) return null;
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+          select: {
+            id: true, name: true, email: true, nickname: true, idade: true,
+            image: true, senha: true, isAdmin: true,
+          },
+        });
+        if (!user?.senha) return null;
+        const ok = await bcrypt.compare(credentials.senha, user.senha);
+        if (!ok) return null;
+        const { senha, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      },
     }),
   ],
+
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) (token as any).uid = (user as any).id;
+
+      if ((token as any).uid) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: (token as any).uid as string },
+          select: { id: true, isAdmin: true, nickname: true, idade: true },
+        });
+
+        if (!dbUser) {
+          (token as any).invalidated = true;
+          delete (token as any).uid;
+          return token;
+        }
+
+        (token as any).isAdmin = dbUser.isAdmin ?? false;
+        (token as any).nickname = dbUser.nickname ?? null;
+        (token as any).idade = dbUser.idade ?? null;
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (!(token as any)?.uid || (token as any)?.invalidated) {
+        return {
+          user: undefined as any,
+          expires: new Date(0).toISOString(),
+        } as any;
+      }
+
+      if (session.user) {
+        (session.user as any).id = (token as any).uid;
+        (session.user as any).isAdmin = (token as any).isAdmin ?? false;
+        (session.user as any).nickname = (token as any).nickname ?? null;
+        (session.user as any).idade = (token as any).idade ?? null;
+      }
+      return session;
+    },
+  },
+
   events: {
     async createUser({ user }) {
-      // preenche campos extras na 1ª vez
       try {
         await prisma.user.update({
           where: { id: user.id },
-          data: { 
-            nickname: "", 
-            idade: null, 
-            provider: "google" 
-          },
+          data: { nickname: '', idade: null },
         });
-        console.log(`Usuário criado: ${user.email}`);
-      } catch (error) {
-        console.error("Erro ao criar usuário:", error);
+      } catch (e) {
+        console.error('events.createUser error:', e);
       }
     },
     async signIn({ user, account }) {
       console.log(`Login realizado: ${user.email} via ${account?.provider}`);
     },
   },
-  callbacks: {
-    async signIn({ user, account, profile }) {
-      try {
-        if (account?.provider === "google" && profile?.email) {
-          // Verifica se usuário já existe com este email
-          const existingUser = await prisma.user.findUnique({
-            where: { email: profile.email },
-          });
-          
-          if (existingUser) {
-            // Usuário existe, permite login automático
-            return true;
-          }
-        }
-        return true;
-      } catch (error) {
-        console.error("Erro no callback signIn:", error);
-        return false;
-      }
-    },
-    async jwt({ token, user, account }) {
-      try {
-        if (user) {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: { 
-              id: true, 
-              nickname: true, 
-              idade: true, 
-              isAdmin: true 
-            },
-          });
-          
-          if (dbUser) {
-            token.uid = dbUser.id;
-            token.nickname = dbUser.nickname ?? null;
-            token.idade = dbUser.idade ?? null;
-            token.isAdmin = dbUser.isAdmin ?? false;
-          }
-        }
-        return token;
-      } catch (error) {
-        console.error("Erro no callback JWT:", error);
-        return token;
-      }
-    },
-    async session({ session, token }) {
-      if (session.user && token) {
-        (session.user as any).id = token.uid;
-        (session.user as any).nickname = token.nickname ?? null;
-        (session.user as any).idade = token.idade ?? null;
-        (session.user as any).isAdmin = token.isAdmin ?? false;
-      }
-      return session;
-    },
-  },
-  // Configurações para melhorar a performance
+
   cookies: {
     sessionToken: {
-      name: "next-auth.session-token",
+      name: 'next-auth.session-token',
       options: {
         httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production"
-      }
-    }
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
-  // Debug apenas em desenvolvimento
-  debug: process.env.NODE_ENV === "development",
+
+  debug: process.env.NODE_ENV === 'development',
 };
 
 const handler = NextAuth(authOptions);
