@@ -20,22 +20,7 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
   const displayEmail = isLogged ? (session?.user?.email || '') : '';
 
   const handleOpenLogin = () => {
-    console.log('🚀 handleOpenLogin chamado');
-    console.log('onClick existe?', !!onClick);
-    
-    if (onClick) {
-      console.log('📞 Chamando onClick personalizado');
-      try {
-        onClick();
-        console.log('✅ onClick executado com sucesso');
-      } catch (error) {
-        console.error('❌ Erro ao executar onClick:', error);
-      }
-      return;
-    }
-    
     // Fallback para NextAuth padrão
-    console.log('🔄 Usando fallback NextAuth');
     signIn(undefined, { callbackUrl: '/account' });
   };
 
@@ -44,8 +29,8 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
       if (!menuRef.current) return;
       if (!menuRef.current.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
   }, []);
 
   if (!isLogged) {
@@ -53,7 +38,6 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
       <button
         onClick={(e) => { 
           e.preventDefault(); 
-          console.log('🖱️ Botão de login clicado');
           handleOpenLogin(); 
         }}
         aria-label="Área do usuário"
@@ -72,9 +56,13 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
   }
 
   return (
-    <div className="relative ml-2" ref={menuRef}>
+    <div className="relative ml-2 overflow-visible" ref={menuRef}>
       <button
-        onClick={() => setOpen(v => !v)}
+      type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(v => !v);
+        }}
         aria-label="Menu do usuário"
         className="flex items-center gap-2 p-0 bg-transparent border-none cursor-pointer"
       >
@@ -107,7 +95,7 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
             Meu perfil
           </button>
 
-          <QuickNick />
+          <QuickNickname />
 
           <div className="h-px bg-white/10 my-2" />
 
@@ -123,7 +111,7 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
   );
 }
 
-function QuickNick() {
+function QuickNickname() {
   const { update } = useSession();
   const [nick, setNick] = useState('');
   const [saving, setSaving] = useState(false);
