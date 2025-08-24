@@ -37,7 +37,8 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
     id: undefined as string | undefined,
     nome: '',
     sobrenome: '',
-    idade: '',
+    birthday: '',
+    cpf: '',
     email: '',
     senha: '',
     nickname: '',
@@ -61,7 +62,8 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
                 id: data.id,
                 nome: data.name || '',
                 sobrenome: data.sobrenome || '',
-                idade: data.idade || '',
+                birthday: data.birthday || '',
+                cpf: data.cpf || '',
                 email: data.email || '',
                 senha: '',
                 nickname: data.nickname || '',
@@ -198,24 +200,20 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
     setLoading(false);
   }
 
-  // Fecha se logar por fora
-  useEffect(() => {
-    if (!open) return;
-    if (session) {
-      onClose();
-      router.refresh();
-    }
-  }, [open, session, onClose, router]);
-
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#181c2b] rounded-xl p-6 lg:p-8 w-full max-w-md text-white shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex gap-4 mb-6 justify-center">
+      <div className="bg-[#181c2b] rounded-xl w-full max-w-md text-white shadow-2xl max-h-[90vh] overflow-y-auto">
+        {/* Tabs no topo - largura completa */}
+        <div className="flex w-full rounded-t-xl overflow-hidden">
           <button
             type="button"
-            className={`px-4 py-2 rounded font-bold ${tab === 'login' ? 'bg-[#9bf401] text-[#151923]' : 'bg-[#23263a] text-white'}`}
+            className={`flex-1 px-4 py-4 font-bold text-lg transition-colors border-b-2 ${
+              tab === 'login' 
+                ? 'bg-[#31344d] text-[#9bf401] border-[#9bf401]' 
+                : 'bg-[#23263a] text-[#42455f] border-transparent hover:bg-[#2a2d46]'
+            }`}
             onClick={() => { setTab('login'); setMessage(null); }}
             disabled={loading}
           >
@@ -223,18 +221,26 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
           </button>
           <button
             type="button"
-            className={`px-4 py-2 rounded font-bold ${tab === 'register' ? 'bg-[#9bf401] text-[#151923]' : 'bg-[#23263a] text-white'}`}
+            className={`flex-1 px-4 py-4 font-bold text-lg transition-colors border-b-2 ${
+              tab === 'register' 
+                ? 'bg-[#31344d] text-[#9bf401] border-[#9bf401]' 
+                : 'bg-[#23263a] text-[#42455f] border-transparent hover:bg-[#2a2d46]'
+            }`}
             onClick={() => { setTab('register'); setMessage(null); }}
             disabled={loading}
           >
             Registrar
           </button>
         </div>
-
+        
+        {/* Conteúdo do modal */}
+        <div className="px-6 lg:px-8 pt-6 lg:pt-8 pb-6 lg:pb-8">
         <h2 className="text-2xl font-bold mb-6">{tab === 'login' ? 'Login' : (form.id ? 'Editar Perfil' : 'Criar Conta')}</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4 flex flex-col">
-            <label htmlFor="email" className="font-semibold mb-2">Email</label>
+            <label htmlFor="email" className="font-semibold mb-2">
+              Email <span className="text-red-400">*</span>
+            </label>
             <input
               name="email"
               type="email"
@@ -246,14 +252,15 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
           </div>
 
           <div className="mb-4 flex flex-col">
-            <label htmlFor="senha" className="font-semibold mb-2">Senha</label>
+            <label htmlFor="senha" className="font-semibold mb-2">
+              Senha <span className="text-red-400">*</span>
+            </label>
             <input
               name="senha"
               type="password"
               value={form.senha}
               onChange={handleChange}
               className="p-2 rounded bg-[#23263a] text-white"
-              // senha obrigatória ao criar conta; opcional ao editar perfil
               required={tab === 'login' || !form.id}
               minLength={tab === 'register' && !form.id ? 6 : undefined}
             />
@@ -264,25 +271,37 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
 
           {tab === 'register' && (
             <>
+              <h3 className="flex text-2xl font-bold mb-2 justify-center"> Dados Pessoais</h3>
               <div className="mb-4 flex flex-col">
                 <label htmlFor="nome" className="font-semibold mb-2">Nome</label>
                 <input name="nome" value={form.nome} onChange={handleChange} className="p-2 rounded bg-[#23263a] text-white" />
               </div>
 
               <div className="mb-4 flex flex-col">
-                <label htmlFor="idade" className="font-semibold mb-2">Idade</label>
-                <input name="idade" type="number" value={form.idade} onChange={handleChange} className="p-2 rounded bg-[#23263a] text-white" />
+                <label htmlFor="nickname" className="font-semibold mb-2">Nickname Minecraft</label>
+                <input name="nickname" value={form.nickname} onChange={handleChange} className="p-2 rounded bg-[#23263a] text-white" />
               </div>
 
               <div className="mb-4 flex flex-col">
-                <label htmlFor="nickname" className="font-semibold mb-2">Nickname Minecraft</label>
-                <input name="nickname" value={form.nickname} onChange={handleChange} className="p-2 rounded bg-[#23263a] text-white" />
+                <label htmlFor="dataNascimento" className="font-semibold mb-2">Data de Nascimento</label>
+                <input
+                  id="dataNascimento"
+                  name="dataNascimento"
+                  type="date"
+                  value={form.birthday}
+                  onChange={handleChange}
+                  className="p-2 rounded bg-[#23263a] text-white"
+                />
+              </div>
+
+              <div className="mb-4 flex flex-col">
+                <label htmlFor="cpf" className="font-semibold mb-2">CPF</label>
+                <input name="cpf" value={form.cpf} onChange={handleChange} className="p-2 rounded bg-[#23263a] text-white" />
               </div>
             </>
           )}
 
           {tab === 'login' && (
-            
             <div className="flex flex-col gap-2 mb-4">
               {message && (
                 <div className={`mb-4 text-center font-semibold ${message.includes('sucesso') || message.includes('Login realizado') ? 'text-green-400' : 'text-red-400'}`}>
@@ -291,7 +310,7 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
               )}
               <button
                 type="button"
-                className="bg-white text-[#151923] font-bold rounded px-6 py-2 flex items-center justify-center gap-2 border border-[#9bf401] hover:bg-[#9bf401] hover:text-[#151923] transition"
+                className="bg-white text-[#151923] font-bold rounded px-6 py-2 flex items-center justify-center gap-2 transition"
                 onClick={async () => {
                   try {
                     setLoading(true);
@@ -304,26 +323,33 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
                 }}
                 disabled={loading}
               >
-                {/* ícone Google */}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20"><g><path fill="#4285F4" d="M24 9.5c3.54 0 6.36 1.22 8.32 2.25l6.16-6.16C34.36 2.34 29.52 0 24 0 14.64 0 6.48 5.84 2.56 14.16l7.28 5.66C12.36 14.02 17.68 9.5 24 9.5z"/><path fill="#34A853" d="M46.1 24.5c0-1.64-.14-3.22-.4-4.75H24v9h12.5c-.52 2.8-2.08 5.18-4.44 6.8l7.16 5.58C43.52 37.16 46.1 31.36 46.1 24.5z"/><path fill="#FBBC05" d="M10.84 28.34c-.6-1.8-.94-3.7-.94-5.84s.34-4.04.94-5.84l-7.28-5.66C2.34 15.64 0 20.48 0 24c0 3.52 2.34 8.36 6.62 13.16l7.28-5.66z"/><path fill="#EA4335" d="M24 48c6.52 0 12-2.16 16.08-5.9l-7.16-5.58c-2.02 1.36-4.62 2.18-8.92 2.18-6.32 0-11.64-4.52-13.52-10.5l-7.28 5.66C6.48 42.16 14.64 48 24 48z"/></g></svg>
                 Entrar com Google
               </button>
             </div>
           )}
+          
           {message && tab === 'register' && (
             <div className={`mb-4 text-center font-semibold ${message.includes('sucesso') || message.includes('Login realizado') ? 'text-green-400' : 'text-red-400'}`}>
               {message}
             </div>
           )}
+          
           <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center">
             <button type="submit" className="bg-[#9bf401] text-[#151923] font-bold rounded px-6 py-2 w-full sm:w-auto" disabled={loading}>
               {tab === 'login' ? 'Entrar' : (form.id ? 'Salvar' : 'Criar conta')}
             </button>
-            <button type="button" className="bg-[#23263a] text-white rounded px-6 py-2 w-full sm:w-auto" onClick={onClose} disabled={loading}>
+            <button 
+              type="button" 
+              className="bg-[#23263a] text-white rounded px-6 py-2 w-full sm:w-auto" 
+              onClick={onClose} 
+              disabled={loading}
+            >
               Cancelar
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

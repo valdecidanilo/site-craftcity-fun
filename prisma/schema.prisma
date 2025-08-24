@@ -15,7 +15,8 @@ model User {
   image          String?
 
   nickname       String?   @unique
-  idade          Int?
+  cpf            Int?
+  birthday       DateTime?
   senha          String?
   provider       String?
   isAdmin        Boolean   @default(false)

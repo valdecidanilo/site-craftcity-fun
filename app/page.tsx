@@ -102,7 +102,7 @@ export default function Component() {
         </div>
 
         {/* Sidebar - Desktop */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block pt-16">
           <Sidebar
             categories={categories}
             selectedCategory={selectedCategory}
@@ -127,7 +127,7 @@ export default function Component() {
             onClick={() => setSidebarOpen(false)}
           >
             <div
-              className="absolute left-0 top-0 h-full w-80 bg-[#181c2b] pt-20 z-[46]"
+              className="absolute left-0 top-0 h-full w-80 bg-[#181c2b] pt-16 z-[46]"
               onClick={e => e.stopPropagation()}
             >
               <Sidebar
