@@ -112,10 +112,16 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
 }
 
 function QuickNickname() {
-  const { update } = useSession();
-  const [nick, setNick] = useState('');
+  const { data: session, update } = useSession();
+  const currentNick = session?.user?.nickname || '';
+  const [nick, setNick] = useState(currentNick);
   const [saving, setSaving] = useState(false);
   const [ok, setOk] = useState<null | boolean>(null);
+
+  // Sync input if session nickname changes
+  useEffect(() => {
+    setNick(currentNick);
+  }, [currentNick]);
 
   return (
     <div className="mt-2 px-3 py-2 rounded-lg">
@@ -124,7 +130,7 @@ function QuickNickname() {
         <input
           value={nick}
           onChange={e => setNick(e.target.value)}
-          placeholder="Seu nick..."
+          placeholder=""
           className="flex-1 bg-[#23263a] w-1 text-white rounded px-3 py-2 outline-none"
         />
         <button

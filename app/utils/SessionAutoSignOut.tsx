@@ -1,16 +1,23 @@
 'use client';
-import { useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useEffect, useRef } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function SessionAutoSignOut() {
   const { status } = useSession();
+  const router = useRouter();
+  const wasAuthenticated = useRef(false);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      // limpa cookie e manda para login
-      signOut({ callbackUrl: '/login' });
+    if (status === 'authenticated') {
+      wasAuthenticated.current = true;
     }
-  }, [status]);
+    if (status === 'unauthenticated' && wasAuthenticated.current) {
+      // Só redireciona se o usuário estava autenticado antes
+      router.replace('/');
+      wasAuthenticated.current = false;
+    }
+  }, [status, router]);
 
   return null;
 }
