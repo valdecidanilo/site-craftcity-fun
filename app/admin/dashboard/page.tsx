@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -7,6 +7,31 @@ import { Header } from '@/components/header/header';
 import { Footer } from '@/components/footer/footer';
 import { Button } from '@/components/button/button';
 import { Plus, Edit, Trash2, Save, X, Tags } from 'lucide-react';
+
+// Formatador de moeda brasileira
+const BRL = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
+// --- Tipos para pedidos ---
+type OrderItem = {
+  id: string;
+  product: { id: string; name: string; minecraftCommand?: string | null };
+  quantity: number;
+  price: number;
+  commandSent: boolean;
+  commandSentAt?: string | null;
+  commandResponse?: string | null;
+};
+
+type Order = {
+  id: string;
+  user: { id: string; name?: string | null; email?: string | null; nickname?: string | null };
+  createdAt: string;
+  status: string;
+  items: OrderItem[];
+};
 
 type Subcategory = {
   id: string;
@@ -55,20 +80,20 @@ export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  // Estados
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(true);
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const [editing, setEditing] = useState<Product | null>(null);
+  // Form states
   const [showForm, setShowForm] = useState(false);
-
+  const [editing, setEditing] = useState<Product | null>(null);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormProduct>({
     name: '',
     price: '',
@@ -79,30 +104,29 @@ export default function AdminDashboard() {
     subcategoryId: '',
   });
 
+  // Category states
+  const [catOpen, setCatOpen] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [newSubcategory, setNewSubcategory] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [catSaving, setCatSaving] = useState(false);
 
-  // Toggle do painel de categorias no mobile
-  const [catOpen, setCatOpen] = useState(false);
+  // Order states
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [orderFilter, setOrderFilter] = useState('');
 
-  const BRL = useMemo(
-    () => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }),
-    []
-  );
-
-  // --------- Guards / Admin check ----------
+  // Verificação de admin
   useEffect(() => {
     if (status === 'loading') return;
-
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+    
+    if (!session) {
+      router.push('/');
       return;
     }
 
     checkAdmin();
-  }, [status, router]);
+  }, [status, router, session]);
 
   async function checkAdmin() {
     try {
@@ -114,7 +138,7 @@ export default function AdminDashboard() {
         return;
       }
       setIsAdmin(true);
-      await Promise.all([loadCategories(), loadProducts()]);
+      await Promise.all([loadCategories(), loadProducts(), loadOrders()]);
     } catch {
       router.push('/');
     } finally {
@@ -145,6 +169,27 @@ export default function AdminDashboard() {
       setError(err instanceof Error ? err.message : 'Falha ao carregar produtos');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadOrders(nick?: string) {
+    setOrderLoading(true);
+    setOrderError(null);
+    try {
+      const url = nick ? `/api/admin/orders?nickname=${encodeURIComponent(nick)}` : '/api/admin/orders';
+      const res = await fetch(url, { cache: 'no-store' });
+      let json;
+      try {
+        json = await res.json();
+      } catch (e) {
+        throw new Error('Erro ao carregar compras: resposta inesperada do servidor.');
+      }
+      if (!res.ok) throw new Error(json?.error || 'Falha ao carregar pedidos');
+      setOrders(json);
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : 'Falha ao carregar pedidos');
+    } finally {
+      setOrderLoading(false);
     }
   }
 
@@ -303,6 +348,39 @@ export default function AdminDashboard() {
       alert(err instanceof Error ? err.message : 'Erro ao criar subcategoria');
     } finally {
       setCatSaving(false);
+    }
+  }
+
+  // Função para reenvio de comando
+  async function resendCommand(itemId: string) {
+    if (!confirm('Tem certeza que deseja reenviar o comando deste item?')) return;
+    try {
+      setOrderLoading(true);
+      const res = await fetch(`/api/orders/resend-command/${itemId}`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Erro ao reenviar comando');
+      setMessage('Comando reenviado com sucesso!');
+      await loadOrders();
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : 'Erro ao reenviar comando');
+    } finally {
+      setOrderLoading(false);
+    }
+  }
+
+  // Filtrar pedidos por nickname
+  async function handleOrderFilter(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      setOrderLoading(true);
+      const res = await fetch(`/api/orders?nickname=${encodeURIComponent(orderFilter)}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Erro ao filtrar pedidos');
+      setOrders(data);
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : 'Erro ao filtrar pedidos');
+    } finally {
+      setOrderLoading(false);
     }
   }
 
@@ -573,6 +651,78 @@ export default function AdminDashboard() {
             </form>
           </section>
         )}
+
+        {/* Painel de Compras de Usuários */}
+        <section className="bg-[#181c2b] border border-white/10 rounded-xl p-6 mb-8">
+          <h2 className="text-xl font-semibold text-white mb-4">Compras de Usuários</h2>
+          <form onSubmit={handleOrderFilter} className="flex flex-col sm:flex-row gap-2 mb-4">
+            <input
+              type="text"
+              placeholder="Filtrar por nickname do jogador"
+              value={orderFilter}
+              onChange={e => setOrderFilter(e.target.value)}
+              className="bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
+            />
+            <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Filtrar</Button>
+          </form>
+          {orderLoading ? (
+            <div className="text-white/70">Carregando compras...</div>
+          ) : orderError ? (
+            <div className="text-red-400">{orderError}</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-white text-sm">
+                <thead className="bg-[#1b2132]">
+                  <tr>
+                    <th className="px-4 py-2">Data</th>
+                    <th className="px-4 py-2">Usuário</th>
+                    <th className="px-4 py-2">Nickname</th>
+                    <th className="px-4 py-2">Produto</th>
+                    <th className="px-4 py-2">Qtd</th>
+                    <th className="px-4 py-2">Comando</th>
+                    <th className="px-4 py-2">Status</th>
+                    <th className="px-4 py-2">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.length === 0 && (
+                    <tr><td colSpan={8} className="text-center py-8 text-white/60">Nenhuma compra encontrada.</td></tr>
+                  )}
+                  {orders.flatMap(order => order.items.map(item => (
+                    <tr key={item.id} className="border-b border-white/10">
+                      <td className="px-4 py-2 whitespace-nowrap">{new Date(order.createdAt).toLocaleString()}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{order.user.name || order.user.email || '—'}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{order.user.nickname || '—'}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{item.product.name}</td>
+                      <td className="px-4 py-2 text-center">{item.quantity}</td>
+                      <td className="px-4 py-2 font-mono text-xs">{item.product.minecraftCommand || '—'}</td>
+                      <td className="px-4 py-2">
+                        {item.commandSent ? (
+                          <span className="text-green-400">Enviado</span>
+                        ) : (
+                          <span className="text-yellow-400">Pendente</span>
+                        )}
+                        {item.commandSentAt && (
+                          <div className="text-white/40 text-xs">{new Date(item.commandSentAt).toLocaleString()}</div>
+                        )}
+                        {item.commandResponse && (
+                          <div className="text-white/60 text-xs">{item.commandResponse}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-2">
+                        <Button
+                          onClick={() => resendCommand(item.id)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
+                          disabled={orderLoading}
+                        >Reenviar</Button>
+                      </td>
+                    </tr>
+                  )))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
 
         {/* Tabela de Produtos */}
         {loading ? (

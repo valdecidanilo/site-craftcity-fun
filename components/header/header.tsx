@@ -27,24 +27,13 @@ export function Header() {
                         <ShoppingCart className="w-6 h-6" /> 
                         Carrinho
                     </a>
-                    {/*
-                    <a href="/terms" className="text-white flex items-center gap-2 hover:text-[#9bf401] transition-colors">
-                        <FileText className="w-5 h-5" /> 
-                        Termos
-                    </a>
-                    
-                    <a href="/privacy" className="text-white flex items-center gap-2 hover:text-[#9bf401] transition-colors">
-                        <Shield className="w-5 h-5" /> 
-                        Privacidade
-                    </a>
-                    
+
                     {isAdmin && (
                         <a href="/admin/dashboard" className="text-white flex items-center gap-2 hover:text-[#FD8500] transition-colors">
-                            <Settings className="w-6 h-6" /> 
+                            <Settings className="w-6 h-6" />
                             Admin
                         </a>
                     )}
-                    */}
                     
                     <UserMenu />
                 </div>

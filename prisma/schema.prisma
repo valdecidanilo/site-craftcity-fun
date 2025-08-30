@@ -44,6 +44,7 @@ model User {
   accounts       Account[]
   sessions       Session[]
   cart           Cart?
+  orders         Order[]
 }
 
 model Account {
@@ -108,17 +109,41 @@ model Subcategory {
 }
 
 model Product {
-  id            String        @id @default(cuid())
-  name          String
-  price         Float
-  discountPrice Float?
-  description   String
-  categoryId    String
-  category      Category      @relation(fields: [categoryId], references: [id])
-  subcategoryId String?
-  subcategory   Subcategory?  @relation(fields: [subcategoryId], references: [id])
-  image         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  cartItems     CartItem[]
+  id               String        @id @default(cuid())
+  name             String
+  price            Float
+  discountPrice    Float?
+  description      String
+  categoryId       String
+  category         Category      @relation(fields: [categoryId], references: [id])
+  subcategoryId    String?
+  subcategory      Subcategory?  @relation(fields: [subcategoryId], references: [id])
+  image            String?
+  minecraftCommand String?       // Comando Minecraft a ser enviado na compra
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  cartItems        CartItem[]
+  orderItems       OrderItem[]
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+  status     String      // ex: 'pending', 'paid', 'failed', 'delivered'
+  items      OrderItem[]
+}
+
+model OrderItem {
+  id              String     @id @default(cuid())
+  orderId         String
+  order           Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product    @relation(fields: [productId], references: [id])
+  quantity        Int        @default(1)
+  price           Float      // preço no momento da compra
+  commandSent     Boolean    @default(false)
+  commandSentAt   DateTime?
+  commandResponse String?
 }
