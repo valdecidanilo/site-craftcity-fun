@@ -15,7 +15,7 @@ model User {
   image          String?
 
   nickname       String?   @unique
-  cpf            Int?
+  cpf            String?
   birthday       DateTime?
   senha          String?
   provider       String?

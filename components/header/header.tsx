@@ -3,13 +3,11 @@ import { useState, useEffect } from 'react';
 import { Home, ShoppingCart, Settings, Menu, X, FileText, Shield } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { UserMenu } from '../auth/UserMenu';
-import { UserProfileModal } from '../auth/UserProfileModal';
 
 export function Header() {
     const { data: session } = useSession();
     const [isAdmin, setIsAdmin] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [modalOpen, setModalOpen] = useState(false);
 
     useEffect(() => {
         setIsAdmin((session?.user as any)?.isAdmin || false);
@@ -48,7 +46,7 @@ export function Header() {
                     )}
                     */}
                     
-                    <UserMenu onClick={() => setModalOpen(true)} />
+                    <UserMenu />
                 </div>
 
                 {/* Menu Mobile - Botão */}
@@ -59,7 +57,7 @@ export function Header() {
                     >
                         {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>
-                    <UserMenu onClick={() => setModalOpen(true)} />
+                    <UserMenu />
                 </div>
             </div>
 
@@ -108,7 +106,7 @@ export function Header() {
                 </div>
             )}
 
-            <UserProfileModal open={modalOpen} onClose={() => setModalOpen(false)} />
+
         </header>
     );
 }

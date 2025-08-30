@@ -20,8 +20,8 @@ export function UserMenu({ onClick }: { onClick?: () => void }) {
   const displayEmail = isLogged ? (session?.user?.email || '') : '';
 
   const handleOpenLogin = () => {
-    // Fallback para NextAuth padrão
-    signIn(undefined, { callbackUrl: '/account' });
+    // Dispara evento para abrir modal de login/registro
+    window.dispatchEvent(new CustomEvent('open-user-profile-modal'));
   };
 
   useEffect(() => {

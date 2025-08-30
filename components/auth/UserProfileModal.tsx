@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -73,10 +74,41 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
         })
         .finally(() => setLoading(false));
     }
-  }, [open, tab, session?.user?.email, form.id]);
+  }, [open, tab, session?.user?.email]);
 
+  function formatCpf(value: string) {
+    // Remove tudo que não for número
+    value = value.replace(/\D/g, '');
+    // Aplica a máscara
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    return value;
+  }
+
+  function isValidCpf(cpf: string) {
+    cpf = cpf.replace(/\D/g, '');
+    if (cpf.length !== 11) return false;
+    // Elimina CPFs inválidos conhecidos
+    if (/^(\d)\1+$/.test(cpf)) return false;
+    let soma = 0, resto;
+    for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.substring(9, 10))) return false;
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.substring(10, 11))) return false;
+    return true;
+  }
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    if (e.target.name === 'cpf') {
+      setForm({ ...form, cpf: formatCpf(e.target.value) });
+    } else {
+      setForm({ ...form, [e.target.name]: e.target.value });
+    }
   }
 
   async function emailExists(email: string) {
@@ -105,6 +137,12 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
       }
 
       if (tab === 'register') {
+        // Validação de CPF
+        if (!form.cpf || !isValidCpf(form.cpf)) {
+          setMessage('Informe um CPF válido.');
+          setLoading(false);
+          return;
+        }
         const isCreate = !form.id; // POST se não tiver id; PUT se tiver (editar)
         if (isCreate) {
           // senha obrigatória para novo registro
@@ -278,7 +316,8 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
               </div>
 
               <div className="mb-4 flex flex-col">
-                <label htmlFor="nickname" className="font-semibold mb-2">Nickname Minecraft</label>
+                <label htmlFor="nickname" className="font-semibold mb-2">
+                  Nickname Minecraft</label>
                 <input name="nickname" value={form.nickname} onChange={handleChange} className="p-2 rounded bg-[#23263a] text-white" />
               </div>
 
@@ -286,7 +325,7 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
                 <label htmlFor="dataNascimento" className="font-semibold mb-2">Data de Nascimento</label>
                 <input
                   id="dataNascimento"
-                  name="dataNascimento"
+                  name="birthday"
                   type="date"
                   value={form.birthday}
                   onChange={handleChange}
@@ -296,7 +335,16 @@ export function UserProfileModal({ open, onClose, initialData, onSave }: ModalPr
 
               <div className="mb-4 flex flex-col">
                 <label htmlFor="cpf" className="font-semibold mb-2">CPF</label>
-                <input name="cpf" value={form.cpf} onChange={handleChange} className="p-2 rounded bg-[#23263a] text-white" />
+                <input
+                  name="cpf"
+                  value={form.cpf}
+                  onChange={handleChange}
+                  className="p-2 rounded bg-[#23263a] text-white"
+                  maxLength={14}
+                  placeholder="000.000.000-00"
+                  inputMode="numeric"
+                  autoComplete="off"
+                />
               </div>
             </>
           )}

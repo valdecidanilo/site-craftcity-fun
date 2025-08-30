@@ -39,8 +39,14 @@ export const authOptions: NextAuthOptions = {
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
           select: {
-            id: true, name: true, email: true, nickname: true, idade: true,
-            image: true, senha: true, isAdmin: true,
+            id: true, 
+            name: true, 
+            email: true, 
+            nickname: true, 
+            birthday: true, // ✅ Campo correto
+            image: true, 
+            senha: true, 
+            isAdmin: true,
           },
         });
         if (!user?.senha) return null;
@@ -59,7 +65,12 @@ export const authOptions: NextAuthOptions = {
       if ((token as any).uid) {
         const dbUser = await prisma.user.findUnique({
           where: { id: (token as any).uid as string },
-          select: { id: true, isAdmin: true, nickname: true, idade: true },
+          select: { 
+            id: true, 
+            isAdmin: true, 
+            nickname: true, 
+            birthday: true // ✅ Campo correto
+          },
         });
 
         if (!dbUser) {
@@ -70,7 +81,7 @@ export const authOptions: NextAuthOptions = {
 
         (token as any).isAdmin = dbUser.isAdmin ?? false;
         (token as any).nickname = dbUser.nickname ?? null;
-        (token as any).idade = dbUser.idade ?? null;
+        (token as any).birthday = dbUser.birthday ?? null; // ✅ Campo correto
       }
 
       return token;
@@ -88,7 +99,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = (token as any).uid;
         (session.user as any).isAdmin = (token as any).isAdmin ?? false;
         (session.user as any).nickname = (token as any).nickname ?? null;
-        (session.user as any).idade = (token as any).idade ?? null;
+        (session.user as any).birthday = (token as any).birthday ?? null; // ✅ Campo correto
       }
       return session;
     },
@@ -99,7 +110,10 @@ export const authOptions: NextAuthOptions = {
       try {
         await prisma.user.update({
           where: { id: user.id },
-          data: { nickname: '', idade: null },
+          data: { 
+            nickname: '', 
+            birthday: null // ✅ Campo correto
+          },
         });
       } catch (e) {
         console.error('events.createUser error:', e);

@@ -39,7 +39,7 @@ export default function Component() {
         setLoading(true)
         setError(null)
         const response = await fetch('/api/products')
-        if (!response.ok) throw new Error('Erro ao carregar produtos')
+        if (!response.ok) throw new Error('Ao carregar produtos')
         const data = await response.json()
         const normalized: Product[] = data.map((p: any) => ({
           id: p.id,

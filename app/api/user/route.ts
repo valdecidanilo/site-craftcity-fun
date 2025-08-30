@@ -15,7 +15,7 @@ export async function GET(_req: NextRequest) {
     }
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { id: true, name: true, email: true, nickname: true, idade: true, image: true, isAdmin: true },
+  select: { id: true, name: true, email: true, nickname: true, image: true, isAdmin: true },
     });
     if (!user) {
       return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404, headers: noStore });
@@ -30,7 +30,7 @@ export async function GET(_req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { email, senha, nome, nickname, idade } = body;
+  const { email, senha, nome, nickname, birthday, cpf } = body;
     
     if (!email || !senha || senha.length < 6) {
       return NextResponse.json({ error: "Email e senha são obrigatórios" }, { status: 400, headers: noStore });
@@ -52,10 +52,11 @@ export async function POST(req: NextRequest) {
         senha: senhaHash,
         name: nome,
         nickname,
-        idade: idade ? Number(idade) : null,
+  birthday: birthday ? new Date(birthday) : null,
+  cpf: cpf ? String(cpf) : null,
         provider: "email"
       },
-      select: { id: true, name: true, email: true, nickname: true, idade: true, image: true, isAdmin: true },
+  select: { id: true, name: true, email: true, nickname: true, image: true, isAdmin: true },
     });
 
     return NextResponse.json({ message: "Usuário criado com sucesso", ...created }, { headers: noStore });
@@ -76,7 +77,8 @@ export async function PUT(req: NextRequest) {
     if (body.nome !== undefined) data.name = body.nome;
     if (body.name !== undefined) data.name = body.name;
     if (body.nickname !== undefined) data.nickname = body.nickname;
-    if (body.idade !== undefined) data.idade = body.idade === null ? null : Number(body.idade);
+  if (body.birthday !== undefined) data.birthday = body.birthday === null ? null : new Date(body.birthday);
+  if (body.cpf !== undefined) data.cpf = body.cpf === null ? null : String(body.cpf);
     
     if (typeof body.senha === 'string' && body.senha.trim()) {
       if (body.senha.length < 6) {
@@ -88,7 +90,7 @@ export async function PUT(req: NextRequest) {
     const updated = await prisma.user.update({
       where: { email: session.user.email },
       data,
-      select: { id: true, name: true, email: true, nickname: true, idade: true, image: true, isAdmin: true },
+  select: { id: true, name: true, email: true, nickname: true, image: true, isAdmin: true },
     });
 
     return NextResponse.json({ message: "Atualizado com sucesso", ...updated }, { headers: noStore });
