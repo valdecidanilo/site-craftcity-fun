@@ -17,8 +17,17 @@ services:
       - .env.local
     environment:
       NODE_ENV: production
-      NEXTAUTH_URL: ${NODE_ENV:+${NEXTAUTH_URL}}${NODE_ENV:development:+${NEXTAUTH_LOCAL_URL}}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      # Forçar as variáveis do Google
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      # Forçar as do Mercado Pago
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN}
+      MERCADOPAGO_ACCESS_TOKEN_TEST: ${MERCADOPAGO_ACCESS_TOKEN_TEST}
+      MERCADOPAGO_PUBLIC_KEY: ${MERCADOPAGO_PUBLIC_KEY}
+      MERCADOPAGO_PUBLIC_KEY_TEST: ${MERCADOPAGO_PUBLIC_KEY_TEST}
+      MERCADOPAGO_SANDBOX: ${MERCADOPAGO_SANDBOX:-true}
     command: >
       sh -c "
         npx prisma generate &&
