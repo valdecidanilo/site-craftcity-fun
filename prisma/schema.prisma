@@ -120,6 +120,9 @@ model Product {
   subcategory      Subcategory?  @relation(fields: [subcategoryId], references: [id])
   image            String?
   minecraftCommand String?       // Comando Minecraft a ser enviado na compra
+  isExpirable      Boolean       @default(false) // Se é um passe com expiração
+  expireDays       Int?          // Quantos dias dura o passe
+  expireCommand    String?       // Comando a ser executado ao expirar
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   cartItems        CartItem[]
@@ -146,4 +149,8 @@ model OrderItem {
   commandSent     Boolean    @default(false)
   commandSentAt   DateTime?
   commandResponse String?
+  expiresAt       DateTime?  // Data de expiração do passe, se aplicável
+  expireCommandSent Boolean  @default(false) // Se o comando de expiração já foi enviado
+  expireCommandSentAt DateTime?
+  expireCommandResponse String?
 }

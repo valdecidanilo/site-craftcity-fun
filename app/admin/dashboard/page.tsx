@@ -63,6 +63,10 @@ type Product = {
   subcategoryId?: string | null;
   category?: { id: string; name: string; slug: string } | null;
   subcategory?: { id: string; name: string; slug: string } | null;
+  isExpirable?: boolean;
+  expireDays?: number | null;
+  expireCommand?: string | null;
+  minecraftCommand?: string | null;
 };
 
 type FormProduct = {
@@ -74,6 +78,10 @@ type FormProduct = {
   image: string;
   categoryId: string;
   subcategoryId: string; // vazio quando não selecionado
+  isExpirable: boolean;
+  expireDays: string;
+  expireCommand: string;
+  minecraftCommand: string;
 };
 
 export default function AdminDashboard() {
@@ -102,6 +110,10 @@ export default function AdminDashboard() {
     image: '',
     categoryId: '',
     subcategoryId: '',
+    isExpirable: false,
+    expireDays: '',
+    expireCommand: '',
+    minecraftCommand: '',
   });
 
   // Category states
@@ -204,6 +216,10 @@ export default function AdminDashboard() {
       image: '',
       categoryId: '',
       subcategoryId: '',
+      isExpirable: false,
+      expireDays: '',
+      expireCommand: '',
+      minecraftCommand: '',
     });
   }
 
@@ -223,6 +239,10 @@ export default function AdminDashboard() {
       image: p.image ?? '',
       categoryId: p.categoryId ?? '',
       subcategoryId: p.subcategoryId ?? '',
+      isExpirable: !!p.isExpirable,
+      expireDays: p.expireDays?.toString() ?? '',
+      expireCommand: p.expireCommand ?? '',
+      minecraftCommand: p.minecraftCommand ?? '',
     });
     setShowForm(true);
   }
@@ -268,6 +288,9 @@ export default function AdminDashboard() {
         image: form.image.trim() || null,
         categoryId: form.categoryId,
         subcategoryId: form.subcategoryId || null,
+        isExpirable: !!form.isExpirable,
+        expireDays: form.isExpirable && form.expireDays ? Number(form.expireDays) : null,
+        expireCommand: form.isExpirable ? form.expireCommand.trim() : null,
       };
 
       const method = editing ? 'PUT' : 'POST';
@@ -549,6 +572,7 @@ export default function AdminDashboard() {
             )}
 
             <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
               <input
                 type="text"
                 placeholder="Nome do produto"
@@ -584,7 +608,56 @@ export default function AdminDashboard() {
                 onChange={(e) => setForm({ ...form, image: e.target.value })}
                 className="bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
               />
-
+              <div className='w-full'>
+                <label className="block text-white/80 text-sm mb-2">Comando ao comprar</label>
+                <input
+                  type="text"
+                  placeholder="/comando para executar ao comprar"
+                  value={form.minecraftCommand}
+                  onChange={(e) => setForm({ ...form, minecraftCommand: e.target.value })}
+                  required
+                  className="bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
+                />
+              </div>
+              {/* Toggle para produto expirável */}
+              <div className="md:col-span-2 flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="isExpirable"
+                  checked={form.isExpirable}
+                  onChange={e => setForm(f => ({ ...f, isExpirable: e.target.checked }))}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="isExpirable" className="text-white/80 text-sm select-none cursor-pointer">Produto expirável</label>
+              </div>
+              
+              {/* Campos de expiração, só aparecem se toggle ativado */}
+              {form.isExpirable && (
+                <>
+                  <div>
+                    <label className="block text-white/80 text-sm mb-2">Dias de validade</label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Ex: 30"
+                      value={form.expireDays}
+                      onChange={e => setForm(f => ({ ...f, expireDays: e.target.value }))}
+                      className="w-full bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/80 text-sm mb-2">Comando ao expirar</label>
+                    <input
+                      type="text"
+                      placeholder="/comando para expiração"
+                      value={form.expireCommand}
+                      onChange={e => setForm(f => ({ ...f, expireCommand: e.target.value }))}
+                      className="w-full bg-[#23263a] text-white px-4 py-2 rounded border border-white/10 focus:outline-none focus:border-[#9bf401]"
+                    />
+                  </div>
+                </>
+              )}
+              
               <div className="md:col-span-1">
                 <label className="block text-white/80 text-sm mb-2">Categoria</label>
                 <select

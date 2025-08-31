@@ -1,0 +1,45 @@
+# Dockerfile.minecraft - Para o serviço de integração
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Instala dependências do sistema
+RUN apk add --no-cache curl openssl
+
+# Copia arquivos de dependências
+COPY package*.json ./
+
+# Instala dependências Node.js
+RUN npm ci --only=production
+
+# Instala dependências específicas para Minecraft
+RUN npm install ws sqlite3 rcon-client express cors helmet
+
+# Copia apenas arquivos necessários para a integração Minecraft
+COPY servidor-minecraft.js ./
+COPY scripts/ ./scripts/
+COPY prisma/ ./prisma/
+
+# Opcional: Copia os packs se você quiser servir via HTTP
+COPY behavior_pack/ ./behavior_pack/
+COPY resource_pack/ ./resource_pack/
+
+# Cria diretórios necessários
+RUN mkdir -p logs minecraft-commands prisma/data
+
+# Define usuário não-root para segurança
+RUN addgroup -g 1001 -S minecraft && \
+    adduser -S mcintegration -u 1001 -G minecraft && \
+    chown -R mcintegration:minecraft /app
+
+USER mcintegration
+
+# Expõe portas
+EXPOSE 3001 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:3001/api/health || exit 1
+
+# Comando padrão
+CMD ["node", "servidor-minecraft.js"]
