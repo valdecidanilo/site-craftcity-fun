@@ -30,9 +30,13 @@ services:
       MERCADOPAGO_SANDBOX: ${MERCADOPAGO_SANDBOX:-true}
     command: >
       sh -c "
+        echo 'Criando diretório...' &&
+        mkdir -p /app/prisma/data &&
+        echo 'Gerando Prisma...' &&
         npx prisma generate &&
-        npx prisma migrate deploy ||
-        npx prisma db push;
+        echo 'Resetando banco...' &&
+        npx prisma migrate reset --force &&
+        echo 'Iniciando aplicação...' &&
         npm run start
       "
     healthcheck:
